@@ -2,25 +2,28 @@ import Foundation
 import SpriteKit
 
 public final class GraphScene: SKScene {
-    private let frameWidth: CGFloat
-    
-    private let frameHeight: CGFloat
-    
-    public override init(size: CGSize) {
-        self.frameWidth = size.width
-        self.frameHeight = size.height
-        
-        super.init(size: size)
-    }
-    
-    required init?(coder aDecoder: NSCoder) {
-        fatalError("init(coder:) has not been implemented")
-    }
-    
     public override func didMove(to view: SKView) {
         super.didMove(to: view)
         backgroundColor = .darkGray
         
-        print("GraphScene dimensions: \(view.frame.size)")
+        setupScene()
+    }
+    
+    private func setupScene() {
+        guard let frameWidth = self.view?.frame.width,
+            let frameHeight = self.view?.frame.height else {
+                return
+        }
+        
+        let xAxisStartPoint = CGPoint(x: frameWidth * 0.5, y: 0.0)
+        let xAxisEndPoint = CGPoint(x: frameWidth * 0.5, y: frameHeight)
+        let xAxis = Axis(startPoint: xAxisStartPoint, endPoint: xAxisEndPoint)
+        
+        let yAxisStartPoint = CGPoint(x: 0.0, y: frameWidth * 0.5)
+        let yAxisEndPoint = CGPoint(x: frameWidth, y: frameWidth * 0.5)
+        let yAxis = Axis(startPoint: yAxisStartPoint, endPoint: yAxisEndPoint)
+        
+        [xAxis, yAxis]
+            .forEach(addChild(_:))
     }
 }

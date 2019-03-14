@@ -5,7 +5,7 @@ public struct ComplexNumber {
     
     public let imaginaryPart: Double?
     
-    public init(re realPart: Double?, im imaginaryPart: Double?) {
+    public init(_ realPart: Double?, _ imaginaryPart: Double?) {
         self.realPart = realPart
         self.imaginaryPart = imaginaryPart
     }
@@ -46,5 +46,46 @@ public struct ComplexNumber {
         } else {
             return 360.0 - degrees
         }
+    }
+    
+    public var thetaRadiansPi: Double {
+        return thetaDegrees.radiansPi
+    }
+    
+    public var thetaRadians: Double {
+        return thetaRadiansPi * Double.pi
+    }
+}
+
+extension ComplexNumber: CustomStringConvertible {
+    public var description: String {
+        let numberOfDecimalPlaces = 2
+        
+        if let realPart = realPart,
+            let imaginaryPart = imaginaryPart {
+            return "\(realPart.rounded(numberOfDecimalPlaces)) + \(imaginaryPart.rounded(numberOfDecimalPlaces))i"
+        }
+        
+        if let realPart = realPart, imaginaryPart == nil {
+            return "\(realPart.rounded(numberOfDecimalPlaces))"
+        }
+        
+        if let imaginaryPart = imaginaryPart, realPart == nil {
+            return "\(imaginaryPart.rounded(numberOfDecimalPlaces))i"
+        }
+        
+        return ""
+    }
+    
+    public var descriptionWithDegrees: String {
+        return description + ", |z| = \(modulus), φ = \(thetaDegrees.rounded(3))°"
+    }
+    
+    public var descriptionWithRadiansPi: String {
+        return description + ", |z| = \(modulus), φ = \(thetaRadiansPi.rounded(3))π rad"
+    }
+    
+    public var descriptionWithRadians: String {
+        return description + ", |z| = \(modulus), φ = \(thetaRadians.rounded(3)) rad"
     }
 }
