@@ -5,7 +5,7 @@ public struct ComplexNumber {
     
     public let imaginaryPart: Double?
     
-    public init(_ realPart: Double?, _ imaginaryPart: Double?) {
+    public init(re realPart: Double?, im imaginaryPart: Double?) {
         self.realPart = realPart
         self.imaginaryPart = imaginaryPart
     }
@@ -78,14 +78,14 @@ extension ComplexNumber: CustomStringConvertible {
     }
     
     public var descriptionWithDegrees: String {
-        return description + ", |z| = \(modulus), φ = \(thetaDegrees.rounded(3))°"
+        return description + ", |z| = \(modulus.rounded(3)), φ = \(thetaDegrees.rounded(3))°"
     }
     
     public var descriptionWithRadiansPi: String {
-        return description + ", |z| = \(modulus), φ = \(thetaRadiansPi.rounded(3))π rad"
+        return description + ", |z| = \(modulus.rounded(3)), φ = \(thetaRadiansPi.rounded(3))π rad"
     }
     
     public var descriptionWithRadians: String {
-        return description + ", |z| = \(modulus), φ = \(thetaRadians.rounded(3)) rad"
+        return description + ", |z| = \(modulus.rounded(3)), φ = \(thetaRadians.rounded(3)) rad"
     }
 }

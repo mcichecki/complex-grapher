@@ -1,6 +1,9 @@
+import Foundation
 import SpriteKit
 
-public class Axis: SKShapeNode {
+public final class AxisNode: SKShapeNode {
+    static let scaleOffset: CGFloat = 50.0
+    
     private let startPoint: CGPoint
     
     private let endPoint: CGPoint
@@ -30,7 +33,7 @@ public class Axis: SKShapeNode {
         linePath.addLine(to: endPoint)
         
         path = linePath
-        strokeColor = .green
+        strokeColor = .white //.green
     }
     
     private func drawArrow() {
@@ -68,7 +71,7 @@ public class Axis: SKShapeNode {
         //        print("center point: \(centerPoint)")
         
         let offset: CGFloat = 5.0
-        let scaleOffset: CGFloat = 50.0
+        let scaleOffset = AxisNode.scaleOffset
         let length = isXAxis ?
             endPoint.y :
             endPoint.x
