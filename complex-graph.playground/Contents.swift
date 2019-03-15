@@ -10,9 +10,14 @@ import SpriteKit
 var title = "Complex Grapher"
 print(title)
 
-let sceneSize = CGSize(width: 700.0, height: 700.0)
+// max width: 768.0, max height: 1024.0
+let sceneSize = CGSize(width: 700.0, height: 1000.0)
 let viewRect = CGRect(origin: CGPoint(x: 0, y: 0), size: sceneSize)
+
 let graphScene = GraphScene(size: sceneSize)
+for _ in 0..<2 {
+    graphScene.addPoint()
+}
 
 let view = SKView(frame: viewRect)
 view.presentScene(graphScene)
