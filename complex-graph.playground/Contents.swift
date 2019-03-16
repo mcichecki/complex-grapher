@@ -17,8 +17,8 @@ let viewRect = CGRect(origin: CGPoint(x: 0, y: 0), size: sceneSize)
 let graphScene = GraphScene(size: sceneSize)
 
 let complexNumbers = [
-    ComplexNumber(re: 4.0, im: -1.0),
-    ComplexNumber(re: -3.5, im: 4.5)
+    ComplexNumber(re: 2.0, im: 1.0),
+    //    ComplexNumber(re: -3.5, im: 4.5)
 ]
 
 complexNumbers.forEach { graphScene.plot(complexNumber: $0) }

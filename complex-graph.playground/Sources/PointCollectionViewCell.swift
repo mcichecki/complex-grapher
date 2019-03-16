@@ -51,6 +51,7 @@ final class PointCollectionViewCell: UICollectionViewCell {
         complexNumberLabel.text = complexNumber.description
         modulusLabel.text = complexNumber.modulusDescription
         angleLabel.text = complexNumber.degreesDescription
+        contentView.layer.borderColor = color.darker(by: 25.0).cgColor
     }
     
     private func addSubviews() {
@@ -78,5 +79,6 @@ final class PointCollectionViewCell: UICollectionViewCell {
     
     private func setupStyling() {
         contentView.layer.cornerRadius = 5.0
+        contentView.layer.borderWidth = 2.0
     }
 }

@@ -19,6 +19,5 @@ public final class PointNode: SKShapeNode {
     
     private func setupPoint() {
         fillColor = .lightBlue
-        strokeColor = .darkBlue
     }
 }

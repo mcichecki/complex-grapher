@@ -14,6 +14,8 @@ public final class GraphScene: SKScene {
     
     private let offset = CGPoint(x: 0.0, y: -100.0)
     
+    private let positionLabelOffset = CGPoint(x: 0.0, y: 15.0)
+    
     private lazy var centerOfAxes: CGPoint = {
         return CGPoint(x: centerPoint.x + offset.x, y: centerPoint.y + offset.y)
     }()
@@ -26,6 +28,24 @@ public final class GraphScene: SKScene {
     
     private lazy var centerPoint: CGPoint = {
         return CGPoint(x: frameWidth * 0.5, y: frameHeight * 0.5)
+    }()
+    
+    private lazy var arcLabelNode: SKLabelNode = {
+        let arcLabelNode = SKLabelNode(fontNamed: "SFCompactText-Regular")
+        arcLabelNode.fontSize = 14.0
+        arcLabelNode.name = NodeName.arcLabel.rawValue
+        arcLabelNode.fontColor = .white
+        
+        return arcLabelNode
+    }()
+    
+    private lazy var positionLabelNode: SKLabelNode = {
+        let positionLabelNode = SKLabelNode(fontNamed: "SFCompactText-Regular")
+        positionLabelNode.fontSize = 14.0
+        positionLabelNode.name = NodeName.positionLabel.rawValue
+        positionLabelNode.fontColor = .white
+        
+        return positionLabelNode
     }()
     
     private let pointsCollectionView: UICollectionView = {
@@ -44,8 +64,10 @@ public final class GraphScene: SKScene {
         case sumNumber
         case sumVectorNode
         case arcNode
+        case arcLabel
         case firstSumVector
         case secondSumVector
+        case positionLabel
     }
     
     public override init(size: CGSize) {
@@ -67,10 +89,6 @@ public final class GraphScene: SKScene {
         print("Center: \(centerPoint)")
         
         setupScene()
-        
-        // TODO: move somewhere else
-        
-        plotComplexNumbersSum(true)
     }
     
     //    public override func update(_ currentTime: TimeInterval) {
@@ -114,8 +132,14 @@ public final class GraphScene: SKScene {
         complexNumbers[attributedPoint.index] = pointNode.position
         activePointName = attributedPoint.complexNumberNodeName
         
-        if withArc {
+        switch complexNumbersSet.numberOfPoints {
+        case 1:
             plotArc(startingPoint)
+            addChild(positionLabelNode)
+        case 2:
+            plotComplexNumbersSum(true)
+        default:
+            return
         }
     }
     
@@ -132,6 +156,18 @@ public final class GraphScene: SKScene {
         let arcNode = SKShapeNode(path: arcDashedPath)
         arcNode.name = NodeName.arcNode.rawValue
         addChild(arcNode)
+        
+        let cosAlpha = cos(endAngle)
+        let sinAlpha = sin(endAngle)
+        let xPoint = cosAlpha * radius
+        let yPoint = sinAlpha * radius
+        
+        // arc label
+        let labelPosition = CGPoint(x: centerOfAxes.x + xPoint, y: centerOfAxes.y + yPoint)
+        arcLabelNode.text = complexNumber.degreesDescription
+        arcLabelNode.position = labelPosition
+        
+        addChild(arcLabelNode)
     }
     
     private func plotSum(_ complexNumber: ComplexNumber) {
@@ -275,7 +311,8 @@ public final class GraphScene: SKScene {
                     sumVectorPath.move(to: complexNumbers[0] ?? .zero)
                     sumVectorPath.addLine(to: sumPosition)
                     
-                    firstSumVector.path = sumVectorPath
+                    let dashedPath = sumVectorPath.copy(dashingWithPhase: 10.0, lengths: dashedPatter)
+                    firstSumVector.path = dashedPath
                 }
                 
                 let secondSumVector = childNode(withName: NodeName.secondSumVector.rawValue)
@@ -284,7 +321,8 @@ public final class GraphScene: SKScene {
                     sumVectorPath.move(to: complexNumbers[1] ?? .zero)
                     sumVectorPath.addLine(to: sumPosition)
                     
-                    secondSumVector.path = sumVectorPath
+                    let dashedPath = sumVectorPath.copy(dashingWithPhase: 10.0, lengths: dashedPatter)
+                    secondSumVector.path = dashedPath
                 }
             }
         } else {
@@ -333,7 +371,7 @@ public final class GraphScene: SKScene {
 
 extension GraphScene {
     public override func touchesBegan(_ touches: Set<UITouch>, with event: UIEvent?) {
-        print("touches began")
+        print("=== touches began")
         for touch in touches {
             if let node = nodes(at: touch.location(in: self)).first,
                 node.name?.contains(AttributedPoint.NodeNames.complexNumberNodeName.rawValue) ?? false {
@@ -381,6 +419,23 @@ extension GraphScene {
                 arcNode.path = arcDashedPath
             }
             
+            if let arcLabel = childNode(withName: NodeName.arcLabel.rawValue) as? SKLabelNode {
+                let cosAlpha = cos(endAngle)
+                let sinAlpha = sin(endAngle)
+                let xPoint = cosAlpha * radius
+                let yPoint = sinAlpha * radius
+                let labelPosition = CGPoint(x: centerOfAxes.x + xPoint, y: centerOfAxes.y + yPoint)
+                arcLabel.text = complexNumber.degreesDescription
+                arcLabel.position = labelPosition
+            }
+            
+            if let positionLabel = childNode(withName: NodeName.positionLabel.rawValue) as? SKLabelNode {
+                positionLabel.text = complexNumber.description
+                let labelPosition = CGPoint(x: movedNode.position.x + positionLabelOffset.x,
+                                            y: movedNode.position.y + positionLabelOffset.y)
+                positionLabel.position = labelPosition
+            }
+            
             movedNode.position = location
             updatePosition(movedNode.position)
         }
@@ -391,7 +446,7 @@ extension GraphScene {
             return
         }
         
-        print("touches ended")
+        print("=== touches ended")
         for touch in touches where touch == pointTouch {
             self.pointTouch = nil
         }
