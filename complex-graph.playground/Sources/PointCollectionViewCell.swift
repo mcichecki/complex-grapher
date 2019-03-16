@@ -3,18 +3,42 @@ import UIKit
 final class PointCollectionViewCell: UICollectionViewCell {
     public static let reuseIdentifier = "PointCollectionViewCell"
     
-    private let complexNumberLabel: UILabel = {
+    private let labelsStackView: UIStackView = {
+        let labelsStackView = UIStackView(frame: .zero)
+        labelsStackView.axis = .vertical
+        labelsStackView.spacing = 5.0
+        return labelsStackView
+    }()
+    
+    private lazy var complexNumberLabel: UILabel = {
         let complexNumberLabel = UILabel(frame: .zero)
-        complexNumberLabel.backgroundColor = .green
+        complexNumberLabel.font = UIFont.systemFont(ofSize: 14.0)
+        complexNumberLabel.textColor = .white
         
         return complexNumberLabel
+    }()
+    
+    private lazy var modulusLabel: UILabel = {
+        let modulusLabel = UILabel(frame: .zero)
+        modulusLabel.font = UIFont.systemFont(ofSize: 14.0)
+        modulusLabel.textColor = .white
+        
+        return modulusLabel
+    }()
+    
+    private lazy var angleLabel: UILabel = {
+        let angleLabel = UILabel(frame: .zero)
+        angleLabel.font = UIFont.systemFont(ofSize: 14.0)
+        angleLabel.textColor = .white
+        
+        return angleLabel
     }()
     
     public override init(frame: CGRect) {
         super.init(frame: frame)
         
         addSubviews()
-        //        setupConstraints()
+        setupConstraints()
         setupStyling()
     }
     
@@ -22,32 +46,37 @@ final class PointCollectionViewCell: UICollectionViewCell {
         fatalError("init(coder:) has not been implemented")
     }
     
-    public func setupCell(with complexNumber: ComplexNumber) {
-        print("complexNumber: \(complexNumber.description)")
+    public func setupCell(with complexNumber: ComplexNumber, color: UIColor) {
+        contentView.backgroundColor = color
         complexNumberLabel.text = complexNumber.description
+        modulusLabel.text = complexNumber.modulusDescription
+        angleLabel.text = complexNumber.degreesDescription
     }
     
     private func addSubviews() {
-        [complexNumberLabel]
-            .forEach { contentView.addSubview($0) }
+        contentView.addSubview(labelsStackView)
+        labelsStackView.translatesAutoresizingMaskIntoConstraints = false
+        [complexNumberLabel, modulusLabel, angleLabel]
+            .forEach {
+                $0.translatesAutoresizingMaskIntoConstraints = false
+                labelsStackView.addArrangedSubview($0)
+        }
     }
     
     private func setupConstraints() {
-        //        NSLayoutConstraint.activate([
-        //
-        //            ])
-        //        self.contentView.addConstraints([
-        //            NSLayoutConstraint(item: complexNumberLabel, attribute: .top, relatedBy: .equal,
-        //                               toItem: contentView, attribute: .top,
-        //                               multiplier: 0.0, constant: 20.0)
-        //            ])
+        NSLayoutConstraint.activate([
+            complexNumberLabel.widthAnchor.constraint(greaterThanOrEqualToConstant: 100.0)
+            ])
         
-        complexNumberLabel.topAnchor.constraint(equalTo: contentView.topAnchor, constant: 10.0).isActive = true
-        complexNumberLabel.leadingAnchor.constraint(equalTo: contentView.leftAnchor, constant: 20.0).isActive = true
-        complexNumberLabel.trailingAnchor.constraint(equalTo: contentView.trailingAnchor, constant: 20.0).isActive = true
+        NSLayoutConstraint.activate([
+            labelsStackView.topAnchor.constraint(equalTo: contentView.topAnchor, constant: 5.0),
+            labelsStackView.leadingAnchor.constraint(equalTo: contentView.leadingAnchor, constant: 5.0),
+            labelsStackView.trailingAnchor.constraint(equalTo: contentView.trailingAnchor, constant: -5.0),
+            labelsStackView.bottomAnchor.constraint(equalTo: contentView.bottomAnchor, constant: -5.0)
+            ])
     }
     
     private func setupStyling() {
-        contentView.backgroundColor = .yellow
+        contentView.layer.cornerRadius = 5.0
     }
 }

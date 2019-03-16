@@ -50,9 +50,6 @@ public final class AxisNode: SKShapeNode {
         
         path = linePath
         strokeColor = .white //.green
-        
-        let lengthX = endPoint.x - startPoint.x
-        let lengthY = endPoint.y - startPoint.y
     }
     
     private func drawArrow() {

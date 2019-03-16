@@ -18,7 +18,7 @@ public final class GraphScene: SKScene {
         return CGPoint(x: centerPoint.x + offset.x, y: centerPoint.y + offset.y)
     }()
     
-    private var complexNumbers: [String: CGPoint] = [:]
+    private var complexNumbers: [Int: CGPoint] = [:]
     
     private var activePointName: String?
     
@@ -28,21 +28,13 @@ public final class GraphScene: SKScene {
         return CGPoint(x: frameWidth * 0.5, y: frameHeight * 0.5)
     }()
     
-    private let complexNumberLabel: UILabel = {
-        let complexNumberLabel = UILabel(frame: .zero)
-        complexNumberLabel.textColor = .white
-        complexNumberLabel.numberOfLines = 0
-        complexNumberLabel.backgroundColor = .white
-        complexNumberLabel.font = UIFont.systemFont(ofSize: 16.0)
-        return complexNumberLabel
-    }()
-    
     private let pointsCollectionView: UICollectionView = {
         let flowLayout = UICollectionViewFlowLayout()
         flowLayout.scrollDirection = .horizontal
-        
+        flowLayout.sectionInset = UIEdgeInsets(top: 0.0, left: 10.0, bottom: 0.0, right: 10.0)
+        flowLayout.estimatedItemSize = CGSize(width: 50.0, height: 50.0)
         let pointsCollectionView = UICollectionView(frame: .zero, collectionViewLayout: flowLayout)
-        pointsCollectionView.backgroundColor = .red
+        pointsCollectionView.backgroundColor = .clear
         return pointsCollectionView
     }()
     
@@ -50,6 +42,10 @@ public final class GraphScene: SKScene {
         static let xAxisName = "x axis node"
         
         static let yAxisName = "y axis node"
+        
+        static let sumNumberName = "sum node"
+        
+        static let sumVectorNodeName = "sum vector"
     }
     
     public override init(size: CGSize) {
@@ -71,16 +67,33 @@ public final class GraphScene: SKScene {
         print("Center: \(centerPoint)")
         
         setupScene()
+        
+        // TODO: move somewhere else
+        
+        plotComplexNumbersSum(true)
     }
     
-    public func addPoint() {
+    //    public override func update(_ currentTime: TimeInterval) {
+    //        super.update(currentTime)
+    //
+    //        print("children: \(children.count)")
+    //    }
+    
+    public func plot(complexNumber: ComplexNumber? = nil) {
         guard let attributedPoint = complexNumbersSet.add() else {
             return
         }
         
+        let yAbsoluteOffset = abs(offset.y)
         let startingXPoint = CGFloat.random(in: frameWidth * 0.2...frameWidth * 0.8)
-        let startingYPoint = CGFloat.random(in: frameWidth * 0.2...frameHeight * 0.8)
-        let startingPoint = CGPoint(x: startingXPoint, y: startingYPoint)
+        let startingYPoint = CGFloat.random(in: yAbsoluteOffset * 1.2...(yAbsoluteOffset + lengthOfAxis) * 0.8)
+        let randomPoint = CGPoint(x: startingXPoint, y: startingYPoint)
+        
+        var startingPoint = randomPoint
+        
+        if let complexNumber = complexNumber {
+            startingPoint = transformComplexNumber(complexNumber)
+        }
         
         let pointNode = PointNode(radius: 10.0, position: startingPoint)
         pointNode.name = attributedPoint.complexNumberNodeName
@@ -98,14 +111,33 @@ public final class GraphScene: SKScene {
         
         addChild(vectorNode)
         
-        complexNumbers[attributedPoint.complexNumberNodeName] = pointNode.position
+        complexNumbers[attributedPoint.index] = pointNode.position
         activePointName = attributedPoint.complexNumberNodeName
+    }
+    
+    private func plotSum(_ complexNumber: ComplexNumber) {
+        let startingPoint = transformComplexNumber(complexNumber)
+        
+        let pointNode = PointNode(radius: 10.0, position: startingPoint)
+        pointNode.name = NodeName.sumNumberName
+        pointNode.zPosition = 5.0
+        pointNode.fillColor = .white
+        
+        addChild(pointNode)
+        
+        let vectorPath = CGMutablePath()
+        vectorPath.move(to: centerOfAxes)
+        vectorPath.addLine(to: startingPoint)
+        let dashedPath = vectorPath.copy(dashingWithPhase: 1.0, lengths: dashedPatter)
+        let vectorNode = SKShapeNode(path: dashedPath)
+        vectorNode.name = NodeName.sumVectorNodeName
+        
+        addChild(vectorNode)
     }
     
     private func setupScene() {
         setupAxes()
         
-        //        setupComplexLabel()
         setupCollectionView()
     }
     
@@ -122,10 +154,10 @@ public final class GraphScene: SKScene {
                 $0.isUserInteractionEnabled = false
         }
         
-        let centerNode = SKShapeNode(circleOfRadius: 5.0)
-        centerNode.fillColor = .red
-        centerNode.position = centerOfAxes
-        addChild(centerNode)
+        //        let centerNode = SKShapeNode(circleOfRadius: 5.0)
+        //        centerNode.fillColor = .red
+        //        centerNode.position = centerOfAxes
+        //        addChild(centerNode)
     }
     
     private func setupCollectionView() {
@@ -138,20 +170,29 @@ public final class GraphScene: SKScene {
         
         pointsCollectionView.register(PointCollectionViewCell.self,
                                       forCellWithReuseIdentifier: PointCollectionViewCell.reuseIdentifier)
+        pointsCollectionView.register(AddPointCollectionViewCell.self,
+                                      forCellWithReuseIdentifier: AddPointCollectionViewCell.reuseIdentifier)
         
         pointsCollectionView.dataSource = self
-        
+        pointsCollectionView.delegate = self
         
         self.view?.addSubview(pointsCollectionView)
     }
     
-    //    private func setupComplexLabel() {
-    //        let complexNumberLabelWidth: CGFloat = 320.0
-    //        let complexNumberLabelHeight: CGFloat = 60.0
-    //        complexNumberLabel.frame = CGRect(x: 10.0, y: 0, width: complexNumberLabelWidth, height: complexNumberLabelHeight)
-    //
-    //        self.view?.addSubview(complexNumberLabel)
-    //    }
+    @discardableResult
+    private func plotComplexNumbersSum(_ plot: Bool = false) -> CGPoint {
+        let sum = complexNumbers
+            .map { transformPosition($0.value) }
+            .reduce(ComplexNumber(re: 0.0, im: 0.0)) { (result, complexNumber) in
+                return result + complexNumber
+        }
+        
+        if plot {
+            plotSum(sum)
+        }
+        
+        return transformComplexNumber(sum)
+    }
     
     private func updatePosition(_ position: CGPoint) {
         guard let activeName = activePointName else {
@@ -159,29 +200,38 @@ public final class GraphScene: SKScene {
             return
         }
         
-        complexNumbers[activeName] = position
+        guard let lastCharacter = activeName.last,
+            let activeNameIndex = Int(String(lastCharacter)) else {
+                return
+        }
+        complexNumbers[activeNameIndex] = position
         
-        //        print("complexNumbers: \(complexNumbers)")
+        let section = complexNumbersSet.reachedMaxNumberOfElements ? 0 : 1
+        let indexPathToBeReloaded = IndexPath(item: activeNameIndex, section: section)
+        pointsCollectionView.reloadItems(at: [indexPathToBeReloaded])
         
-        //        let attributedText = getFormattedLabelText()
-        //        complexNumberLabel.attributedText = attributedText
+        // update sum
+        updateSumPosition()
     }
     
-    private func getFormattedLabelText() -> NSAttributedString {
-        let mutableAttributedString = NSMutableAttributedString(string: "")
-        for i in 0..<complexNumbersSet.numberOfPoints {
-            
-            guard let nodeName = complexNumbersSet.attributedPoint(for: i)?.complexNumberNodeName,
-                let nodePosition = childNode(withName: nodeName)?.position else {
-                    continue
-            }
-            
-            let complexNumber = transformPosition(nodePosition)
-            let attributedString = NSAttributedString(string: "\(i): \(complexNumber.descriptionWithDegrees)\n", attributes: [NSAttributedString.Key.foregroundColor: complexNumbersSet.colorForPoint(nodeName) ?? .white])
-            mutableAttributedString.append(attributedString)
-            
+    private func updateSumPosition() {
+        let position = plotComplexNumbersSum()
+        
+        guard let sumNode = childNode(withName: NodeName.sumNumberName) else {
+            return
         }
-        return mutableAttributedString
+        
+        let newPath = CGMutablePath()
+        newPath.move(to: centerOfAxes)
+        newPath.addLine(to: position)
+        let dashedPath = newPath.copy(dashingWithPhase: 1.0, lengths: dashedPatter)
+        
+        let lineNode = childNode(withName: NodeName.sumVectorNodeName)
+        if let lineNode = lineNode as? SKShapeNode {
+            lineNode.path = dashedPath
+        }
+        
+        sumNode.position = position
     }
     
     private func transformPosition(_ position: CGPoint) -> ComplexNumber {
@@ -199,6 +249,20 @@ public final class GraphScene: SKScene {
                                           im: Double(zPosition.y).rounded(2))
         
         return complexNumber
+    }
+    
+    private func transformComplexNumber(_ complexNumber: ComplexNumber) -> CGPoint {
+        let multiplier = Double(AxisNode.scaleOffset)
+        let multipledPosition = CGPoint(x: (complexNumber.realPart ?? 0.0) * multiplier,
+                                        y: (complexNumber.imaginaryPart ?? 0.0) * multiplier)
+        let graphPosition = CGPoint(x: multipledPosition.x + centerOfAxes.x,
+                                    y: multipledPosition.y + centerOfAxes.y)
+        
+        //        print("complexNumber: x: \(complexNumber.realPart) + y: \(complexNumber.imaginaryPart)")
+        //        print("mult position: \(multipledPosition)")
+        //        print("graph position: \(graphPosition)")
+        
+        return graphPosition
     }
 }
 
@@ -256,27 +320,73 @@ extension GraphScene {
     }
 }
 
+// MARK: UICollectionViewDataSource methods
+
 extension GraphScene: UICollectionViewDataSource {
+    public func numberOfSections(in collectionView: UICollectionView) -> Int {
+        return complexNumbersSet.reachedMaxNumberOfElements ? 1 : 2
+    }
+    
     public func collectionView(_ collectionView: UICollectionView, numberOfItemsInSection section: Int) -> Int {
-        print("number of cells: \(complexNumbersSet.sortedSet.count)")
-        return complexNumbersSet.sortedSet.count
+        if section == 0 {
+            return complexNumbersSet.reachedMaxNumberOfElements ? complexNumbersSet.sortedSet.count : 1
+        } else if section == 1 {
+            return complexNumbersSet.sortedSet.count
+        }
+        
+        return 0
     }
     
     public func collectionView(_ collectionView: UICollectionView, cellForItemAt indexPath: IndexPath) -> UICollectionViewCell {
+        guard (indexPath.section != 0 ||
+            complexNumbersSet.reachedMaxNumberOfElements) else {
+                let pointCellIdentifier = AddPointCollectionViewCell.reuseIdentifier
+                let dequeuedCell = collectionView.dequeueReusableCell(withReuseIdentifier: pointCellIdentifier,
+                                                                      for: indexPath)
+                
+                guard let cell = dequeuedCell as? AddPointCollectionViewCell else {
+                    fatalError("Could not dequeue a cell")
+                }
+                
+                return cell
+        }
         
-        let dequeuedCell = collectionView.dequeueReusableCell(withReuseIdentifier: PointCollectionViewCell.reuseIdentifier,
+        let pointCellIdentifier = PointCollectionViewCell.reuseIdentifier
+        let dequeuedCell = collectionView.dequeueReusableCell(withReuseIdentifier: pointCellIdentifier,
                                                               for: indexPath)
         
         guard let cell = dequeuedCell as? PointCollectionViewCell else {
             fatalError("Could not dequeue a cell")
         }
         
-        guard let position = complexNumbers[activePointName ?? ""] else {
+        guard let position = complexNumbers[indexPath.item] else {
             fatalError("No complex number")
         }
         
-        cell.setupCell(with: transformPosition(position))
+        cell.setupCell(with: transformPosition(position), color: complexNumbersSet.sortedSet[indexPath.item].nodeColor)
         
         return cell
+    }
+}
+
+// MARK: UICollectionViewDelegate methods
+
+extension GraphScene: UICollectionViewDelegate {
+    public func collectionView(_ collectionView: UICollectionView, didSelectItemAt indexPath: IndexPath) {
+        guard indexPath.section == 0,
+            indexPath.item == 0 else {
+                return
+        }
+        
+        plot()
+        
+        if complexNumbersSet.reachedMaxNumberOfElements {
+            collectionView.reloadData()
+            return
+        }
+        
+        updateSumPosition()
+        let newItemIndexPath = IndexPath(item: complexNumbersSet.numberOfPoints - 1, section: 1)
+        collectionView.insertItems(at: [newItemIndexPath])
     }
 }

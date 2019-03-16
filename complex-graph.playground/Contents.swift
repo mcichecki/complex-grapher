@@ -7,7 +7,7 @@ import SpriteKit
  http://www.dchopkins.com/Kaul-cmplx-var.pdf
  */
 
-var title = "Complex Grapher"
+var title = "Complex Grapher\n"
 print(title)
 
 // max width: 768.0, max height: 1024.0
@@ -15,9 +15,13 @@ let sceneSize = CGSize(width: 700.0, height: 1000.0)
 let viewRect = CGRect(origin: CGPoint(x: 0, y: 0), size: sceneSize)
 
 let graphScene = GraphScene(size: sceneSize)
-for _ in 0..<2 {
-    graphScene.addPoint()
-}
+
+let complexNumbers = [
+    ComplexNumber(re: 4.0, im: -1.0),
+    ComplexNumber(re: -3.5, im: 4.5)
+]
+
+complexNumbers.forEach { graphScene.plot(complexNumber: $0) }
 
 let view = SKView(frame: viewRect)
 view.presentScene(graphScene)

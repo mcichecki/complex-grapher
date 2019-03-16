@@ -88,4 +88,12 @@ extension ComplexNumber: CustomStringConvertible {
     public var descriptionWithRadians: String {
         return description + ", |z| = \(modulus.rounded(3)), φ = \(thetaRadians.rounded(3)) rad"
     }
+    
+    public var modulusDescription: String {
+        return "|z| = \(modulus.rounded(3))"
+    }
+    
+    public var degreesDescription: String {
+        return "φ = \(thetaDegrees.rounded(3))°"
+    }
 }

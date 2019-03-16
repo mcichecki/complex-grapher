@@ -8,11 +8,12 @@ final class ComplexNumbersSet {
         return complexNumbersSet.count
     }
     
+    var reachedMaxNumberOfElements: Bool {
+        return UIColor.nodesColors.count == numberOfPoints
+    }
+    
     private lazy var nodesColors: [UIColor] = {
-        let colors: [UIColor] = [.nodeYellow,
-                                 .nodeRed,
-                                 .nodeLightPurple,
-                                 .nodeGreen].shuffled()
+        let colors: [UIColor] = UIColor.nodesColors.shuffled()
         
         return colors
     }()
@@ -21,12 +22,15 @@ final class ComplexNumbersSet {
     
     @discardableResult
     func add() -> AttributedPoint? {
+        guard !nodesColors.isEmpty else {
+            return nil
+        }
+        
         let index = complexNumbersSet.count
         let indexToBeRemoved = Int.random(in: 0..<nodesColors.count)
         guard indexToBeRemoved <= nodesColors.count - 1 else {
             return nil
         }
-        
         let pickedColor = nodesColors.remove(at: indexToBeRemoved)
         let attributedPoint = AttributedPoint(index: index, nodeColor: pickedColor)
         complexNumbersSet.insert(attributedPoint)
