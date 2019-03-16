@@ -1,6 +1,7 @@
 import Foundation
 import UIKit.UIColor
 
+// TODO: Change name to smth different
 final class ComplexNumbersSet {
     public private(set)var sortedSet: [AttributedPoint] = []
     
@@ -28,7 +29,6 @@ final class ComplexNumbersSet {
             return nil
         }
         
-        //        let index = sortedSet.count
         let index = uniqueNumber
         uniqueNumber += 1
         let indexToBeRemoved = Int.random(in: 0..<nodesColors.count)
@@ -37,7 +37,6 @@ final class ComplexNumbersSet {
         }
         let pickedColor = nodesColors.remove(at: indexToBeRemoved)
         let attributedPoint = AttributedPoint(index: index, nodeColor: pickedColor)
-        //        sortedSet.insert(attributedPoint)
         sortedSet.append(attributedPoint)
         
         sortSet()
@@ -45,7 +44,7 @@ final class ComplexNumbersSet {
     }
     
     func remove(at index: Int) -> [String] {
-        print("index remove: \(index), \(sortedSet)")
+        //        print("index remove: \(index), \(sortedSet)")
         guard !sortedSet.isEmpty,
             index <= sortedSet.count - 1 else {
                 return []
@@ -53,8 +52,6 @@ final class ComplexNumbersSet {
         
         let element = sortedSet.remove(at: index)
         nodesColors.append(element.nodeColor)
-        //        sortedSet.remove(element)
-        //        sortedSet.remove(at: index)
         
         return [element.complexNumberNodeName, element.vectorNumberNodeName]
     }
@@ -89,12 +86,4 @@ final class ComplexNumbersSet {
         
         sortedSet = sortedSet.sorted(by: { $0.index < $1.index })
     }
-    
-    //    private func updateNames() {
-    //        sortedSet
-    //            .enumerated()
-    //            .forEach { (offset, element) in
-    //                <#code#>
-    //        }
-    //    }
 }
