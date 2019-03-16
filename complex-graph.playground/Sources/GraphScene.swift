@@ -38,14 +38,14 @@ public final class GraphScene: SKScene {
         return pointsCollectionView
     }()
     
-    private enum NodeName {
-        static let xAxisName = "x axis node"
-        
-        static let yAxisName = "y axis node"
-        
-        static let sumNumberName = "sum node"
-        
-        static let sumVectorNodeName = "sum vector"
+    private enum NodeName: String {
+        case xAxis
+        case yAxis
+        case sumNumber
+        case sumVectorNode
+        case arcNode
+        case firstSumVector
+        case secondSumVector
     }
     
     public override init(size: CGSize) {
@@ -79,7 +79,7 @@ public final class GraphScene: SKScene {
     //        print("children: \(children.count)")
     //    }
     
-    public func plot(complexNumber: ComplexNumber? = nil) {
+    public func plot(complexNumber: ComplexNumber? = nil, withArc: Bool = false) {
         guard let attributedPoint = complexNumbersSet.add() else {
             return
         }
@@ -105,21 +105,40 @@ public final class GraphScene: SKScene {
         let vectorPath = CGMutablePath()
         vectorPath.move(to: centerOfAxes)
         vectorPath.addLine(to: startingPoint)
-        let dashedPath = vectorPath.copy(dashingWithPhase: 1.0, lengths: dashedPatter)
-        let vectorNode = SKShapeNode(path: dashedPath)
+        let vectorNode = SKShapeNode(path: vectorPath)
+        vectorNode.strokeColor = attributedPoint.nodeColor
         vectorNode.name = attributedPoint.vectorNumberNodeName
         
         addChild(vectorNode)
         
         complexNumbers[attributedPoint.index] = pointNode.position
         activePointName = attributedPoint.complexNumberNodeName
+        
+        if withArc {
+            plotArc(startingPoint)
+        }
+    }
+    
+    private func plotArc(_ position: CGPoint) {
+        let complexNumber = transformPosition(position)
+        let endAngle = CGFloat(complexNumber.thetaRadians)
+        let radius = CGFloat(complexNumber.modulus) * AxisNode.scaleOffset * 0.5
+        
+        let arcPath = UIBezierPath(arcCenter: centerOfAxes, radius: radius,
+                                   startAngle: 0, endAngle: endAngle,
+                                   clockwise: true)
+        let arcDashedPath = arcPath.cgPath.copy(dashingWithPhase: 1.0, lengths: dashedPatter)
+        
+        let arcNode = SKShapeNode(path: arcDashedPath)
+        arcNode.name = NodeName.arcNode.rawValue
+        addChild(arcNode)
     }
     
     private func plotSum(_ complexNumber: ComplexNumber) {
         let startingPoint = transformComplexNumber(complexNumber)
         
         let pointNode = PointNode(radius: 10.0, position: startingPoint)
-        pointNode.name = NodeName.sumNumberName
+        pointNode.name = NodeName.sumNumber.rawValue
         pointNode.zPosition = 5.0
         pointNode.fillColor = .white
         
@@ -128,9 +147,8 @@ public final class GraphScene: SKScene {
         let vectorPath = CGMutablePath()
         vectorPath.move(to: centerOfAxes)
         vectorPath.addLine(to: startingPoint)
-        let dashedPath = vectorPath.copy(dashingWithPhase: 1.0, lengths: dashedPatter)
-        let vectorNode = SKShapeNode(path: dashedPath)
-        vectorNode.name = NodeName.sumVectorNodeName
+        let vectorNode = SKShapeNode(path: vectorPath)
+        vectorNode.name = NodeName.sumVectorNode.rawValue
         
         addChild(vectorNode)
     }
@@ -143,10 +161,10 @@ public final class GraphScene: SKScene {
     
     private func setupAxes() {
         let xAxisNode = AxisNode(length: lengthOfAxis, center: centerOfAxes)
-        xAxisNode.name = NodeName.xAxisName
+        xAxisNode.name = NodeName.xAxis.rawValue
         
         let yAxisNode = AxisNode(length: lengthOfAxis, center: centerOfAxes, orientation: .vertical)
-        yAxisNode.name = NodeName.yAxisName
+        yAxisNode.name = NodeName.yAxis.rawValue
         
         [xAxisNode, yAxisNode]
             .forEach {
@@ -215,23 +233,68 @@ public final class GraphScene: SKScene {
     }
     
     private func updateSumPosition() {
-        let position = plotComplexNumbersSum()
+        let sumPosition = plotComplexNumbersSum()
         
-        guard let sumNode = childNode(withName: NodeName.sumNumberName) else {
+        guard let sumNode = childNode(withName: NodeName.sumNumber.rawValue) else {
             return
         }
         
         let newPath = CGMutablePath()
         newPath.move(to: centerOfAxes)
-        newPath.addLine(to: position)
-        let dashedPath = newPath.copy(dashingWithPhase: 1.0, lengths: dashedPatter)
+        newPath.addLine(to: sumPosition)
         
-        let lineNode = childNode(withName: NodeName.sumVectorNodeName)
-        if let lineNode = lineNode as? SKShapeNode {
-            lineNode.path = dashedPath
+        let vectorNode = childNode(withName: NodeName.sumVectorNode.rawValue)
+        if let vectorNode = vectorNode as? SKShapeNode {
+            vectorNode.path = newPath
         }
         
-        sumNode.position = position
+        if complexNumbers.count == 2 {
+            if childNode(withName: NodeName.firstSumVector.rawValue) == nil || childNode(withName: NodeName.secondSumVector.rawValue) == nil {
+                for complexNumberPosition in complexNumbers {
+                    let sumVectorPath = CGMutablePath()
+                    sumVectorPath.move(to: complexNumberPosition.value)
+                    sumVectorPath.addLine(to: sumPosition)
+                    
+                    let sumVectorNode = SKShapeNode(path: sumVectorPath)
+                    switch complexNumberPosition.key {
+                    case 0:
+                        sumVectorNode.name = NodeName.firstSumVector.rawValue
+                    case 1:
+                        sumVectorNode.name = NodeName.secondSumVector.rawValue
+                    default:
+                        return
+                    }
+                    
+                    sumVectorNode.strokeColor = .white
+                    addChild(sumVectorNode)
+                }
+            } else {
+                let firstSumVector = childNode(withName: NodeName.firstSumVector.rawValue)
+                if let firstSumVector = firstSumVector as? SKShapeNode {
+                    let sumVectorPath = CGMutablePath()
+                    sumVectorPath.move(to: complexNumbers[0] ?? .zero)
+                    sumVectorPath.addLine(to: sumPosition)
+                    
+                    firstSumVector.path = sumVectorPath
+                }
+                
+                let secondSumVector = childNode(withName: NodeName.secondSumVector.rawValue)
+                if let secondSumVector = secondSumVector as? SKShapeNode {
+                    let sumVectorPath = CGMutablePath()
+                    sumVectorPath.move(to: complexNumbers[1] ?? .zero)
+                    sumVectorPath.addLine(to: sumPosition)
+                    
+                    secondSumVector.path = sumVectorPath
+                }
+            }
+        } else {
+            let firstSumVector = childNode(withName: NodeName.firstSumVector.rawValue)
+            let secondSumVector = childNode(withName: NodeName.secondSumVector.rawValue)
+            
+            [firstSumVector, secondSumVector].forEach { $0?.removeFromParent() }
+        }
+        
+        sumNode.position = sumPosition
     }
     
     private func transformPosition(_ position: CGPoint) -> ComplexNumber {
@@ -296,11 +359,26 @@ extension GraphScene {
             let newPath = CGMutablePath()
             newPath.move(to: centerOfAxes)
             newPath.addLine(to: location)
-            let dashedPath = newPath.copy(dashingWithPhase: 1.0, lengths: dashedPatter)
             
-            let lineNode = childNode(withName: complexNumbersSet.vectorNameForPoint(activePointName) ?? "")
-            if let lineNode = lineNode as? SKShapeNode {
-                lineNode.path = dashedPath
+            // vector
+            let vecctorNode = childNode(withName: complexNumbersSet.vectorNameForPoint(activePointName) ?? "")
+            if let vecctorNode = vecctorNode as? SKShapeNode {
+                vecctorNode.path = newPath
+            }
+            
+            // arc
+            let complexNumber = transformPosition(movedNode.position)
+            let endAngle = CGFloat(complexNumber.thetaRadians)
+            let radius = CGFloat(complexNumber.modulus) * AxisNode.scaleOffset * 0.5
+            
+            let arcPath = UIBezierPath(arcCenter: centerOfAxes, radius: radius,
+                                       startAngle: 0, endAngle: endAngle,
+                                       clockwise: true)
+            
+            let arcNode = childNode(withName: NodeName.arcNode.rawValue)
+            if let arcNode = arcNode as? SKShapeNode {
+                let arcDashedPath = arcPath.cgPath.copy(dashingWithPhase: 1.0, lengths: dashedPatter)
+                arcNode.path = arcDashedPath
             }
             
             movedNode.position = location

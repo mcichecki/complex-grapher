@@ -23,6 +23,10 @@ let complexNumbers = [
 
 complexNumbers.forEach { graphScene.plot(complexNumber: $0) }
 
+// with arc
+//let complexNumber = ComplexNumber(re: 2.0, im: 2.0)
+//graphScene.plot(complexNumber: complexNumber, withArc: true)
+
 let view = SKView(frame: viewRect)
 view.presentScene(graphScene)
 PlaygroundPage.current.liveView = view
