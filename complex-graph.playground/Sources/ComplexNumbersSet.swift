@@ -39,6 +39,18 @@ final class ComplexNumbersSet {
         return attributedPoint
     }
     
+    func remove(at index: Int) -> [String] {
+        guard !sortedSet.isEmpty,
+            index <= sortedSet.count - 1 else {
+                return []
+        }
+        
+        let element = sortedSet.remove(at: index)
+        complexNumbersSet.remove(element)
+        
+        return [element.complexNumberNodeName, element.vectorNumberNodeName]
+    }
+    
     func vectorNameForPoint(_ name: String) -> String? {
         return complexNumbersSet.first(where: { $0.complexNumberNodeName == name })?.vectorNumberNodeName
     }

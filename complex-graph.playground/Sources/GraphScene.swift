@@ -53,8 +53,11 @@ public final class GraphScene: SKScene {
         flowLayout.scrollDirection = .horizontal
         flowLayout.sectionInset = UIEdgeInsets(top: 0.0, left: 10.0, bottom: 0.0, right: 10.0)
         flowLayout.estimatedItemSize = CGSize(width: 50.0, height: 50.0)
+        
         let pointsCollectionView = UICollectionView(frame: .zero, collectionViewLayout: flowLayout)
         pointsCollectionView.backgroundColor = .clear
+        pointsCollectionView.isUserInteractionEnabled = true
+        
         return pointsCollectionView
     }()
     
@@ -262,10 +265,17 @@ public final class GraphScene: SKScene {
         
         let section = complexNumbersSet.reachedMaxNumberOfElements ? 0 : 1
         let indexPathToBeReloaded = IndexPath(item: activeNameIndex, section: section)
-        pointsCollectionView.reloadItems(at: [indexPathToBeReloaded])
+        pointsCollectionView.reloadItems(at: [indexPathToBeReloaded]) // << it has to be changed!
+        print(#line)
         
-        // update sum
-        updateSumPosition()
+        // update sum, do we need this if?
+        if complexNumbersSet.numberOfPoints > 1 {
+            
+            updateSumPosition()
+        } else {
+            childNode(withName: NodeName.sumNumber.rawValue)?.removeFromParent()
+            childNode(withName: NodeName.sumVectorNode.rawValue)?.removeFromParent()
+        }
     }
     
     private func updateSumPosition() {
@@ -386,7 +396,7 @@ extension GraphScene {
             return
         }
         
-        //        print("touches moved")
+        //        print("=== touches moved")
         for touch in touches where touch == pointTouch {
             let location = touch.location(in: self)
             guard let activePointName = activePointName,
@@ -496,6 +506,8 @@ extension GraphScene: UICollectionViewDataSource {
             fatalError("No complex number")
         }
         
+        cell.tag = indexPath.item
+        cell.delegate = self
         cell.setupCell(with: transformPosition(position), color: complexNumbersSet.sortedSet[indexPath.item].nodeColor)
         
         return cell
@@ -521,5 +533,20 @@ extension GraphScene: UICollectionViewDelegate {
         updateSumPosition()
         let newItemIndexPath = IndexPath(item: complexNumbersSet.numberOfPoints - 1, section: 1)
         collectionView.insertItems(at: [newItemIndexPath])
+    }
+}
+
+// MARK: PointCollectionViewCellDelegateMethods
+extension GraphScene: PointCollectionViewCellDelegate {
+    func didTapRemove(_ cell: PointCollectionViewCell, item: Int) {
+        print("remove: \(item)")
+        
+        // TODO: fix
+        //        childNode(withName: complexNumbersSet.remove(at: item))?.removeFromParent()
+        //        complexNumbersSet.remove(at: item).forEach {
+        //            childNode(withName: $0)?.removeFromParent()
+        //        }
+        //
+        //        pointsCollectionView.reloadData()
     }
 }
