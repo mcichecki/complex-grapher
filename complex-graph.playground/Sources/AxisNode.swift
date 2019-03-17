@@ -82,6 +82,12 @@ public final class AxisNode: SKShapeNode {
         let arrowNode = SKShapeNode(path: arrowPath)
         arrowNode.fillColor = .white
         addChild(arrowNode)
+        
+        let axisLabelNode = SKLabelNode(text: isXAxis ? "Re" : "Im")
+        axisLabelNode.fontName = LabelProperties.fontName
+        axisLabelNode.fontSize  = LabelProperties.fontSize
+        axisLabelNode.position = CGPoint(x: thirdPoint.x + (isXAxis ? 5.0 : 10.0), y: thirdPoint.y + (isXAxis ? 18.0 : 0.0))
+        addChild(axisLabelNode)
     }
     
     private func drawScale() {
