@@ -99,4 +99,15 @@ extension ComplexNumber: CustomStringConvertible {
     public var degreesDescription: String {
         return "φ = \(thetaDegrees.rounded(3))°"
     }
+    
+    public var synthesizerDescription: String {
+        var synthDescription = description
+            .replacingOccurrences(of: ".", with: " point ")
+            .replacingOccurrences(of: "-", with: " minus ")
+            .replacingOccurrences(of: "+", with: " plus ")
+        synthDescription.append("\n--modulus: \(String(modulus.rounded(2)).replacingOccurrences(of: ".", with: " point "))")
+        synthDescription.append("\n--angle: \(String(thetaDegrees.rounded(2)).replacingOccurrences(of: ".", with: " point ")) degrees")
+        //        print(synthDescription)
+        return synthDescription
+    }
 }

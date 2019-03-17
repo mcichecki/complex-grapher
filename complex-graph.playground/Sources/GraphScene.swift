@@ -16,6 +16,8 @@ public final class GraphScene: SKScene {
     
     private let positionLabelOffset = CGPoint(x: 0.0, y: 15.0)
     
+    private lazy var speechSynthesizer = SpeechSynthesizer()
+    
     private lazy var centerOfAxes: CGPoint = {
         return CGPoint(x: centerPoint.x + offset.x, y: centerPoint.y + offset.y)
     }()
@@ -656,11 +658,13 @@ extension GraphScene: UICollectionViewDelegate {
     public func collectionView(_ collectionView: UICollectionView, didSelectItemAt indexPath: IndexPath) {
         guard indexPath.section == 0,
             indexPath.item == 0 else {
+                let position = complexNumbersPositions[indexPath.item]
+                speechSynthesizer.speak(transformPosition(position))
+                
                 return
         }
         
         plot()
-        //        print(#line)
         
         if complexNumbersSet.reachedMaxNumberOfElements {
             collectionView.reloadData()
