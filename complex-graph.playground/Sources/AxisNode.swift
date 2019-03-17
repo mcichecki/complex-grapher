@@ -18,6 +18,12 @@ public final class AxisNode: SKShapeNode {
         return startPoint.y == endPoint.y
     }
     
+    private enum LabelProperties {
+        static let fontSize: CGFloat = 12.0
+        static let fontName = "HelveticaNeue-CondensedBold"
+        static let color = UIColor.white.adjust(by: 0.8)
+    }
+    
     public init(length: CGFloat, center: CGPoint, orientation: Orientation = .horizontal) {
         let halfLength = length * 0.5
         //        print("axe center: \(center)")
@@ -89,7 +95,7 @@ public final class AxisNode: SKShapeNode {
         if isXAxis {
             var tmpYOffset = centerOfAxis.x
             // y axis from center to right
-            for _ in 0...numberOfScales {
+            for i in 0...numberOfScales {
                 let scalePath = CGMutablePath()
                 let movePoint = tmpYOffset
                 
@@ -99,18 +105,39 @@ public final class AxisNode: SKShapeNode {
                 tmpYOffset += scaleOffset
                 let scaleNode = SKShapeNode(path: scalePath)
                 addChild(scaleNode)
+                
+                if i == 0 {
+                    continue
+                }
+                
+                // label
+                let numberLabelNode = SKLabelNode(text: String(i))
+                numberLabelNode.fontSize = LabelProperties.fontSize
+                numberLabelNode.fontName = LabelProperties.fontName
+                numberLabelNode.fontColor = LabelProperties.color
+                numberLabelNode.position = CGPoint(x: movePoint, y: centerOfAxis.y + offsetSize - 25.0)
+                addChild(numberLabelNode)
             }
             
             tmpYOffset = centerOfAxis.x - scaleOffset
             // y axis from center to left
-            for _ in 0...(numberOfScales - 1) {
+            for i in 0...(numberOfScales - 1) {
                 let scalePath = CGMutablePath()
                 scalePath.move(to: CGPoint(x: tmpYOffset, y: centerOfAxis.y + offsetSize))
                 scalePath.addLine(to: CGPoint(x: tmpYOffset, y: centerOfAxis.y - offsetSize))
                 
-                tmpYOffset -= scaleOffset
                 let scaleNode = SKShapeNode(path: scalePath)
                 addChild(scaleNode)
+                
+                // label
+                let numberLabelNode = SKLabelNode(text: String(-(1 + i)))
+                numberLabelNode.fontSize = LabelProperties.fontSize
+                numberLabelNode.fontName = LabelProperties.fontName
+                numberLabelNode.fontColor = LabelProperties.color
+                numberLabelNode.position = CGPoint(x: tmpYOffset - 2.5, y: centerOfAxis.y + offsetSize - 25.0)
+                addChild(numberLabelNode)
+                
+                tmpYOffset -= scaleOffset
             }
             
             return
@@ -118,27 +145,50 @@ public final class AxisNode: SKShapeNode {
         
         var tmpXOffset = centerOfAxis.y
         // x axis from center to top
-        for _ in 0...numberOfScales {
+        for i in 0...numberOfScales {
             let scalePath = CGMutablePath()
             scalePath.move(to: CGPoint(x: centerOfAxis.x - offsetSize, y: tmpXOffset))
             scalePath.addLine(to: CGPoint(x: centerOfAxis.x + offsetSize, y: tmpXOffset))
             
-            tmpXOffset += scaleOffset
             let scaleNode = SKShapeNode(path: scalePath)
             scaleNode.fillColor = .red
             addChild(scaleNode)
+            
+            // label
+            if i == 0 {
+                tmpXOffset += scaleOffset
+                continue
+            }
+            
+            let numberLabelNode = SKLabelNode(text: String(i))
+            numberLabelNode.fontSize = LabelProperties.fontSize
+            numberLabelNode.fontName = LabelProperties.fontName
+            numberLabelNode.fontColor = LabelProperties.color
+            numberLabelNode.position = CGPoint(x: centerOfAxis.x + offsetSize + 7.5, y: tmpXOffset - 5.0)
+            addChild(numberLabelNode)
+            
+            tmpXOffset += scaleOffset
         }
         
         tmpXOffset = centerOfAxis.y - scaleOffset
         // x axis from center to bottom
-        for _ in 0...(numberOfScales - 1) {
+        for i in 0...(numberOfScales - 1) {
             let scalePath = CGMutablePath()
             scalePath.move(to: CGPoint(x: centerOfAxis.x - offsetSize, y: tmpXOffset))
             scalePath.addLine(to: CGPoint(x: centerOfAxis.x + offsetSize, y: tmpXOffset))
             
-            tmpXOffset -= scaleOffset
             let scaleNode = SKShapeNode(path: scalePath)
             addChild(scaleNode)
+            
+            // label
+            let numberLabelNode = SKLabelNode(text: String(-(1+i)))
+            numberLabelNode.fontSize = LabelProperties.fontSize
+            numberLabelNode.fontName = LabelProperties.fontName
+            numberLabelNode.fontColor = LabelProperties.color
+            numberLabelNode.position = CGPoint(x: centerOfAxis.x + offsetSize + 7.5, y: tmpXOffset - 5.0)
+            addChild(numberLabelNode)
+            
+            tmpXOffset -= scaleOffset
         }
         
         return

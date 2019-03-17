@@ -11,7 +11,7 @@ extension UIColor {
     
     static let nodesColors: [UIColor] = [
         .rgb(235, 77, 75), // red
-        .rgb(249, 202, 36), // yellow
+        .rgb(240, 195, 48), // yellow
         //        .rgb(246, 229, 141), // light yellow
         .rgb(106, 176, 76), // green
         .rgb(104, 109, 224), // lightPurple

@@ -57,8 +57,31 @@ public final class GraphScene: SKScene {
         let pointsCollectionView = UICollectionView(frame: .zero, collectionViewLayout: flowLayout)
         pointsCollectionView.backgroundColor = .clear
         pointsCollectionView.isUserInteractionEnabled = true
+        pointsCollectionView.translatesAutoresizingMaskIntoConstraints = false
         
         return pointsCollectionView
+    }()
+    
+    private let sumLabel: UILabel = {
+        let sumLabel = UILabel(frame: .zero)
+        //        sumLabel.text = "sum: (1.5 + 2.0) + (2.0 + 2.5)i = 3.5 + 4.5i"
+        sumLabel.textColor = .white
+        
+        return sumLabel
+    }()
+    
+    private let realLabel: UILabel = {
+        let realLabel = UILabel(frame: .zero)
+        realLabel.textColor = .white
+        
+        return realLabel
+    }()
+    
+    private let imaginaryLabel: UILabel = {
+        let imaginaryLabel = UILabel(frame: .zero)
+        imaginaryLabel.textColor = .white
+        
+        return imaginaryLabel
     }()
     
     private enum NodeName: String {
@@ -196,8 +219,8 @@ public final class GraphScene: SKScene {
     
     private func setupScene() {
         setupAxes()
-        
         setupCollectionView()
+        setupLabels()
     }
     
     private func setupAxes() {
@@ -238,10 +261,29 @@ public final class GraphScene: SKScene {
         self.view?.addSubview(pointsCollectionView)
     }
     
+    private func setupLabels() {
+        let width: CGFloat = frameWidth * 0.95
+        let height: CGFloat = 20.0
+        
+        [sumLabel,
+         realLabel,
+         imaginaryLabel]
+            .enumerated()
+            .forEach {
+                $0.element.frame = CGRect(x: (frameWidth - width) * 0.5,
+                                          y: 140.0 + CGFloat($0.offset * 25),
+                                          width: width,
+                                          height: height)
+                self.view?.addSubview($0.element)
+        }
+    }
+    
     @discardableResult
     private func plotComplexNumbersSum(_ plot: Bool = false) -> CGPoint {
-        let sum = complexNumbersPositions
+        let complexNumbers = complexNumbersPositions
             .map { transformPosition($0) }
+        
+        let sum = complexNumbers
             .reduce(ComplexNumber(re: 0.0, im: 0.0)) { (result, complexNumber) in
                 return result + complexNumber
         }
@@ -250,6 +292,68 @@ public final class GraphScene: SKScene {
             plotSum(sum)
         }
         
+        let realParts = complexNumbers
+            .compactMap { $0.realPart }
+        
+        let imaginaryParts = complexNumbers
+            .compactMap { $0.imaginaryPart }
+        
+        var realPartsString = ""
+        var imaginaryPartsString = ""
+        
+        [realParts,
+         imaginaryParts]
+            .enumerated()
+            .forEach {
+                for (index, part) in $0.element.enumerated() {
+                    let isReal = $0.offset == 0
+                    if index == 0 {
+                        isReal ?
+                            realPartsString.append("\(part)") :
+                            imaginaryPartsString.append("\(part)")
+                    } else {
+                        let sign = part < 0 ? "-" : "+"
+                        isReal ?
+                            realPartsString.append(" \(sign)" + " \(abs(part))") :
+                            imaginaryPartsString.append(" \(sign)" + " \(abs(part))")
+                    }
+                }
+        }
+        
+        let sumString = "sum: \(sum.description)"
+        //        let realPartsWithDescription = "real: \(realPartsString)"
+        //        let imaginaryPartsWithDescription = "im: \(imaginaryPartsString)"
+        
+        let font = realLabel.font
+        let defaultAttributes: [NSAttributedString.Key: Any] = [NSAttributedString.Key.font: font]
+        let greenTextAttributes: [NSAttributedString.Key: Any] = [.foregroundColor: UIColor.nodesColors[2],
+                                                                  .font: UIFont.systemFont(ofSize: font?.pointSize ?? 15.0, weight: .bold)]
+        let orangeTextAttributes: [NSAttributedString.Key: Any] = [.foregroundColor: UIColor.nodesColors[4],
+                                                                   .font: UIFont.systemFont(ofSize: font?.pointSize ?? 15.0, weight: .bold)]
+        
+        let realAttributedString = NSMutableAttributedString(string: "real: ",
+                                                             attributes: defaultAttributes)
+        let realPartAttributedString = NSAttributedString(string: realPartsString,
+                                                          attributes: greenTextAttributes)
+        realAttributedString.append(realPartAttributedString)
+        
+        let imaginaryAttributedString = NSMutableAttributedString(string: "imaginary: ",
+                                                                  attributes: defaultAttributes)
+        let imaginaryPartAttributedString = NSAttributedString(string: imaginaryPartsString,
+                                                               attributes: orangeTextAttributes)
+        
+        let sumAttributedString = NSMutableAttributedString(string: "sum: ", attributes: defaultAttributes)
+        let realPartSumAttributedString = NSAttributedString(string: "\(sum.realPart?.rounded(2) ?? 0.0)", attributes: greenTextAttributes)
+        let signAttributedString = NSAttributedString(string: (sum.imaginaryPart ?? 0.0) < 0.0 ? " - " : " + ", attributes: defaultAttributes)
+        let imaginaryPartSumAttributedString = NSAttributedString(string: "\(abs(sum.imaginaryPart?.rounded(2) ?? 0.0))i", attributes: orangeTextAttributes)
+        sumAttributedString.append(realPartSumAttributedString)
+        sumAttributedString.append(signAttributedString)
+        sumAttributedString.append(imaginaryPartSumAttributedString)
+        
+        imaginaryAttributedString.append(imaginaryPartAttributedString)
+        sumLabel.attributedText = sumAttributedString
+        realLabel.attributedText = realAttributedString
+        imaginaryLabel.attributedText = imaginaryAttributedString
         return transformComplexNumber(sum)
     }
     
@@ -293,6 +397,7 @@ public final class GraphScene: SKScene {
         }
         
         let numberOfComplexNumbers = complexNumbersPositions.count
+        
         switch numberOfComplexNumbers {
         case 2: // two nodes = sum vectors
             if childNode(withName: NodeName.firstSumVector.rawValue) == nil || childNode(withName: NodeName.secondSumVector.rawValue) == nil {
@@ -431,14 +536,12 @@ extension GraphScene {
                 vecctorNode.path = newPath
             }
             
-            //            if  {
             [NodeName.arcNode,
              NodeName.arcLabel,
              NodeName.positionLabel]
                 .map { $0.rawValue }
                 .compactMap { childNode(withName: $0) }
                 .forEach { $0.isHidden = false }
-            //            }
             
             // arc
             let complexNumber = transformPosition(movedNode.position)
@@ -595,13 +698,11 @@ extension GraphScene: PointCollectionViewCellDelegate {
                 .forEach { $0.removeFromParent() }
         }
         
-        if activeIndex == item {
-            nodes.map { $0.rawValue }
-                .compactMap { childNode(withName: $0) }
-                .forEach {
-                    $0.isHidden = true
-            }
-        }
+        //        if activeIndex == item {
+        nodes.map { $0.rawValue }
+            .compactMap { childNode(withName: $0) }
+            .forEach { $0.isHidden = true }
+        //        }
         
         complexNumbersPositions.remove(at: item)
         updateSumPosition()
