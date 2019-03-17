@@ -28,6 +28,17 @@ public final class GraphScene: SKScene {
     
     private var pointTouch: UITouch?
     
+    private var sumBackgroundView: UIView = {
+        let view = UIView(frame: .zero)
+        view.backgroundColor = .white
+        return view
+    }()
+    
+    private var sumComplexNumberView: ComplexNumberView = {
+        let sumComplexNumberView = ComplexNumberView(frame: .zero, isDarkModeEnabled: true)
+        return sumComplexNumberView
+    }()
+    
     private lazy var centerPoint: CGPoint = {
         return CGPoint(x: frameWidth * 0.5, y: frameHeight * 0.5)
     }()
@@ -223,6 +234,7 @@ public final class GraphScene: SKScene {
         setupAxes()
         setupCollectionView()
         setupLabels()
+        setupSumComplexNumberView()
     }
     
     private func setupAxes() {
@@ -267,17 +279,46 @@ public final class GraphScene: SKScene {
         let width: CGFloat = frameWidth * 0.95
         let height: CGFloat = 20.0
         
+        // TODO: maybe make every sum component in the color of the node?
+        
         [sumLabel,
          realLabel,
          imaginaryLabel]
             .enumerated()
             .forEach {
-                $0.element.frame = CGRect(x: (frameWidth - width) * 0.5,
-                                          y: 140.0 + CGFloat($0.offset * 25),
-                                          width: width,
-                                          height: height)
+                $0.element.frame = CGRect(x: 140.0,//(frameWidth - width) * 0.5,
+                    y: 145.0 + CGFloat($0.offset * 25),
+                    width: width,
+                    height: height)
                 self.view?.addSubview($0.element)
         }
+    }
+    
+    private func setupSumComplexNumberView() {
+        view?.addSubview(sumBackgroundView)
+        
+        let width: CGFloat = 120.0
+        let height: CGFloat = 80.0
+        
+        let sumBackgroundViewFrame = CGRect(x: 10.0,
+                                            y: 140.0,
+                                            width: width,
+                                            height: height)
+        
+        sumBackgroundView.frame = sumBackgroundViewFrame
+        sumBackgroundView.addSubview(sumComplexNumberView)
+        
+        sumComplexNumberView.translatesAutoresizingMaskIntoConstraints = false
+        
+        let constraints: [NSLayoutConstraint] = [
+            sumComplexNumberView.leadingAnchor.constraint(equalTo: sumBackgroundView.leadingAnchor, constant: 10.0),
+            sumComplexNumberView.trailingAnchor.constraint(equalTo: sumBackgroundView.trailingAnchor, constant: 10.0),
+            sumComplexNumberView.centerYAnchor.constraint(equalTo: sumBackgroundView.centerYAnchor)
+        ]
+        NSLayoutConstraint.activate(constraints)
+        
+        //        sumComplexNumberView.setupView(with: ComplexNumber(re: 5.0, im: 2.0))
+        sumBackgroundView.layer.cornerRadius = 5.0
     }
     
     @discardableResult
@@ -356,6 +397,9 @@ public final class GraphScene: SKScene {
         sumLabel.attributedText = sumAttributedString
         realLabel.attributedText = realAttributedString
         imaginaryLabel.attributedText = imaginaryAttributedString
+        
+        sumComplexNumberView.setupView(with: sum)
+        
         return transformComplexNumber(sum)
     }
     
