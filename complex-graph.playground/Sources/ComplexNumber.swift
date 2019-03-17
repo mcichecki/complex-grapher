@@ -57,13 +57,16 @@ public struct ComplexNumber {
     }
 }
 
+// MARK: Description
+
 extension ComplexNumber: CustomStringConvertible {
     public var description: String {
         let numberOfDecimalPlaces = 2
         
         if let realPart = realPart,
             let imaginaryPart = imaginaryPart {
-            return "\(realPart.rounded(numberOfDecimalPlaces)) + \(imaginaryPart.rounded(numberOfDecimalPlaces))i"
+            let sign = imaginaryPart < 0 ? "-" : "+"
+            return "\(realPart.rounded(numberOfDecimalPlaces)) \(sign) \(abs(imaginaryPart.rounded(numberOfDecimalPlaces)))i"
         }
         
         if let realPart = realPart, imaginaryPart == nil {

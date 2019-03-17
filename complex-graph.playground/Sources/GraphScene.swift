@@ -20,8 +20,7 @@ public final class GraphScene: SKScene {
         return CGPoint(x: centerPoint.x + offset.x, y: centerPoint.y + offset.y)
     }()
     
-    //    private var complexNumbers: [Int: CGPoint] = [:]
-    private var complexNumbers: [CGPoint] = []
+    private var complexNumbersPositions: [CGPoint] = []
     
     private var activePointName: String?
     
@@ -134,7 +133,7 @@ public final class GraphScene: SKScene {
         [pointNode, vectorNode]
             .forEach(addChild(_:))
         
-        complexNumbers.append(pointNode.position)
+        complexNumbersPositions.append(pointNode.position)
         activePointName = attributedPoint.complexNumberNodeName
         
         switch complexNumbersSet.numberOfPoints {
@@ -158,9 +157,8 @@ public final class GraphScene: SKScene {
                                    startAngle: 0, endAngle: endAngle,
                                    clockwise: true)
         let arcDashedPath = arcPath.cgPath.copy(dashingWithPhase: 1.0, lengths: dashedPatter)
-        
         let arcNode = SKShapeNode(path: arcDashedPath)
-        print("plot arc")
+        arcNode.alpha = 0.5
         arcNode.name = NodeName.arcNode.rawValue
         addChild(arcNode)
         
@@ -242,7 +240,7 @@ public final class GraphScene: SKScene {
     
     @discardableResult
     private func plotComplexNumbersSum(_ plot: Bool = false) -> CGPoint {
-        let sum = complexNumbers
+        let sum = complexNumbersPositions
             .map { transformPosition($0) }
             .reduce(ComplexNumber(re: 0.0, im: 0.0)) { (result, complexNumber) in
                 return result + complexNumber
@@ -263,7 +261,7 @@ public final class GraphScene: SKScene {
         
         let index = complexNumbersSet.indexForPoint(activeName)
         
-        complexNumbers[index] = position
+        complexNumbersPositions[index] = position
         
         let section = complexNumbersSet.reachedMaxNumberOfElements ? 0 : 1
         let indexPathToBeReloaded = IndexPath(item: index, section: section)
@@ -294,11 +292,11 @@ public final class GraphScene: SKScene {
             vectorNode.path = newPath
         }
         
-        let numberOfComplexNumbers = complexNumbers.count
+        let numberOfComplexNumbers = complexNumbersPositions.count
         switch numberOfComplexNumbers {
         case 2: // two nodes = sum vectors
             if childNode(withName: NodeName.firstSumVector.rawValue) == nil || childNode(withName: NodeName.secondSumVector.rawValue) == nil {
-                for (index, complexNumberPosition) in complexNumbers.enumerated() {
+                for (index, complexNumberPosition) in complexNumbersPositions.enumerated() {
                     let sumVectorPath = CGMutablePath()
                     sumVectorPath.move(to: complexNumberPosition)
                     sumVectorPath.addLine(to: sumPosition)
@@ -321,10 +319,11 @@ public final class GraphScene: SKScene {
                 if let firstSumVector = firstSumVector as? SKShapeNode {
                     let sumVectorPath = CGMutablePath()
                     let index = 0
-                    sumVectorPath.move(to: complexNumbers.elementExists(at: index) ? complexNumbers[index] : .zero)
+                    sumVectorPath.move(to: complexNumbersPositions.elementExists(at: index) ? complexNumbersPositions[index] : .zero)
                     sumVectorPath.addLine(to: sumPosition)
                     
                     let dashedPath = sumVectorPath.copy(dashingWithPhase: 10.0, lengths: dashedPatter)
+                    firstSumVector.alpha = 0.5
                     firstSumVector.path = dashedPath
                 }
                 
@@ -332,10 +331,11 @@ public final class GraphScene: SKScene {
                 if let secondSumVector = secondSumVector as? SKShapeNode {
                     let sumVectorPath = CGMutablePath()
                     let index = 1
-                    sumVectorPath.move(to: complexNumbers.elementExists(at: index) ? complexNumbers[index] : .zero)
+                    sumVectorPath.move(to: complexNumbersPositions.elementExists(at: index) ? complexNumbersPositions[index] : .zero)
                     sumVectorPath.addLine(to: sumPosition)
                     
                     let dashedPath = sumVectorPath.copy(dashingWithPhase: 10.0, lengths: dashedPatter)
+                    secondSumVector.alpha = 0.5
                     secondSumVector.path = dashedPath
                 }
             }
@@ -359,7 +359,7 @@ public final class GraphScene: SKScene {
     
     // TODO: Remove
     private func listPoints() -> String {
-        return "\(complexNumbers.map { transformPosition($0) }))"
+        return "\(complexNumbersPositions.map { transformPosition($0) }))"
     }
     
     private func transformPosition(_ position: CGPoint) -> ComplexNumber {
@@ -430,6 +430,15 @@ extension GraphScene {
             if let vecctorNode = vecctorNode as? SKShapeNode {
                 vecctorNode.path = newPath
             }
+            
+            //            if  {
+            [NodeName.arcNode,
+             NodeName.arcLabel,
+             NodeName.positionLabel]
+                .map { $0.rawValue }
+                .compactMap { childNode(withName: $0) }
+                .forEach { $0.isHidden = false }
+            //            }
             
             // arc
             let complexNumber = transformPosition(movedNode.position)
@@ -524,11 +533,11 @@ extension GraphScene: UICollectionViewDataSource {
         //            print("complexNumbers: \(complexNumbers)")
         //            fatalError("No complex number for \(indexPath.item)")
         //        }
-        guard indexPath.item <= complexNumbers.count - 1 else {
+        guard indexPath.item <= complexNumbersPositions.count - 1 else {
             fatalError("No complex number for \(indexPath.item)")
         }
         
-        let position = complexNumbers[indexPath.item]
+        let position = complexNumbersPositions[indexPath.item]
         
         cell.tag = indexPath.item
         cell.delegate = self
@@ -565,7 +574,8 @@ extension GraphScene: UICollectionViewDelegate {
 
 extension GraphScene: PointCollectionViewCellDelegate {
     func didTapRemove(_ cell: PointCollectionViewCell, item: Int) {
-        print("remove: \(item)")
+        let activeIndex = complexNumbersSet.indexForPoint(activePointName ?? "")
+        print("remove: \(item), active: \(activeIndex)")
         
         // TODO: fix
         complexNumbersSet.remove(at: item)
@@ -573,18 +583,27 @@ extension GraphScene: PointCollectionViewCellDelegate {
                 childNode(withName: $0)?.removeFromParent()
         }
         
+        let nodes = [
+            NodeName.arcNode,
+            NodeName.arcLabel,
+            NodeName.positionLabel
+        ]
+        
         if complexNumbersSet.numberOfPoints == 0 {
-            [
-                NodeName.arcNode,
-                NodeName.arcLabel,
-                NodeName.positionLabel
-                ]
-                .map { $0.rawValue }
+            nodes.map { $0.rawValue }
                 .compactMap { childNode(withName: $0) }
                 .forEach { $0.removeFromParent() }
         }
         
-        complexNumbers.remove(at: item)
+        if activeIndex == item {
+            nodes.map { $0.rawValue }
+                .compactMap { childNode(withName: $0) }
+                .forEach {
+                    $0.isHidden = true
+            }
+        }
+        
+        complexNumbersPositions.remove(at: item)
         updateSumPosition()
         pointsCollectionView.reloadData()
     }

@@ -43,6 +43,7 @@ final class PointCollectionViewCell: UICollectionViewCell {
     private lazy var deleteButton: UIButton = {
         let deleteButton = UIButton(frame: .zero)
         deleteButton.setTitle("X", for: .normal)
+        deleteButton.titleLabel?.font = UIFont.systemFont(ofSize: 13.0, weight: UIFont.Weight.bold)
         deleteButton.backgroundColor = .red
         deleteButton.layer.zPosition = 10.0
         deleteButton.addTarget(self, action: #selector(tappedDelete), for: .touchUpInside)
@@ -83,33 +84,31 @@ final class PointCollectionViewCell: UICollectionViewCell {
     }
     
     private func setupConstraints() {
-        NSLayoutConstraint.activate([
-            complexNumberLabel.widthAnchor.constraint(greaterThanOrEqualToConstant: 100.0)
-            ])
-        
         let buttonSize: CGFloat = 16.0
         let offset = buttonSize * 0.5
-        NSLayoutConstraint.activate([
-            labelsStackView.topAnchor.constraint(equalTo: contentView.topAnchor, constant: offset),
-            labelsStackView.leadingAnchor.constraint(equalTo: contentView.leadingAnchor, constant: offset),
-            labelsStackView.trailingAnchor.constraint(equalTo: contentView.trailingAnchor, constant: -offset),
-            labelsStackView.bottomAnchor.constraint(equalTo: contentView.bottomAnchor, constant: -offset)
-            ])
         
-        NSLayoutConstraint.activate([
-            deleteButton.bottomAnchor.constraint(equalTo: labelsStackView.topAnchor, constant: buttonSize * 0.2),
-            deleteButton.trailingAnchor.constraint(equalTo: labelsStackView.trailingAnchor, constant: buttonSize * 0.8),
-            deleteButton.widthAnchor.constraint(equalToConstant: buttonSize),
-            deleteButton.heightAnchor.constraint(equalToConstant: buttonSize)
-            ])
+        let labelConstraints = [complexNumberLabel.widthAnchor.constraint(greaterThanOrEqualToConstant: 100.0)]
+        
+        let stackViewConstraints = [labelsStackView.topAnchor.constraint(equalTo: contentView.topAnchor, constant: offset),
+                                    labelsStackView.leadingAnchor.constraint(equalTo: contentView.leadingAnchor, constant: offset),
+                                    labelsStackView.trailingAnchor.constraint(equalTo: contentView.trailingAnchor, constant: -offset),
+                                    labelsStackView.bottomAnchor.constraint(equalTo: contentView.bottomAnchor, constant: -offset)]
+        
+        let deleteButtonConstraints = [deleteButton.bottomAnchor.constraint(equalTo: labelsStackView.topAnchor, constant: buttonSize * 0.4),
+                                       deleteButton.trailingAnchor.constraint(equalTo: labelsStackView.trailingAnchor, constant: buttonSize * 0.6),
+                                       deleteButton.widthAnchor.constraint(equalToConstant: buttonSize),
+                                       deleteButton.heightAnchor.constraint(equalToConstant: buttonSize)]
+        
+        [labelConstraints,
+         stackViewConstraints,
+         deleteButtonConstraints]
+            .forEach { NSLayoutConstraint.activate($0) }
         
         deleteButton.layer.cornerRadius = buttonSize * 0.5
     }
     
     private func setupStyling() {
         contentView.layer.cornerRadius = 5.0
-        //        contentView.backgroundColor = .yellow
-        //        labelsStackView.backgroundColor = .green
     }
     
     @objc private func tappedDelete() {
