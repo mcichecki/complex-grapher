@@ -93,8 +93,20 @@ public final class GraphScene: SKScene {
     private let imaginaryLabel: UILabel = {
         let imaginaryLabel = UILabel(frame: .zero)
         imaginaryLabel.textColor = .white
+        imaginaryLabel.font = imaginaryLabel.font.withSize(15.0)
         
         return imaginaryLabel
+    }()
+    
+    private let topStackView: UIStackView = {
+        let topStackView = UIStackView(frame: .zero)
+        topStackView.translatesAutoresizingMaskIntoConstraints = false
+        topStackView.axis = .vertical
+        topStackView.spacing = 5.0
+        //        topStackView.distribution = UIStackView.Distribution.fillProportionally
+        topStackView.alignment = UIStackView.Alignment.firstBaseline
+        
+        return topStackView
     }()
     
     private enum NodeName: String {
@@ -233,7 +245,6 @@ public final class GraphScene: SKScene {
     private func setupScene() {
         setupAxes()
         setupCollectionView()
-        setupLabels()
         setupSumComplexNumberView()
     }
     
@@ -249,20 +260,22 @@ public final class GraphScene: SKScene {
                 addChild($0)
                 $0.isUserInteractionEnabled = false
         }
-        
-        //        let centerNode = SKShapeNode(circleOfRadius: 5.0)
-        //        centerNode.fillColor = .red
-        //        centerNode.position = centerOfAxes
-        //        addChild(centerNode)
     }
     
     private func setupCollectionView() {
-        let collectionViewWidth: CGFloat = frameWidth * 0.95
-        let collectionViewHeight: CGFloat = 120.0
-        pointsCollectionView.frame = CGRect(x: (frameWidth - collectionViewWidth) * 0.5,
-                                            y: 10.0,
-                                            width: collectionViewWidth,
-                                            height: collectionViewHeight)
+        view?.addSubview(topStackView)
+        
+        pointsCollectionView.alwaysBounceHorizontal = true
+        pointsCollectionView.translatesAutoresizingMaskIntoConstraints = false
+        
+        guard let view = view else { return }
+        
+        let pointsCollectionViewConstraints: [NSLayoutConstraint] = [
+            pointsCollectionView.heightAnchor.constraint(equalToConstant: 100.0),
+            pointsCollectionView.widthAnchor.constraint(equalToConstant: frameWidth)
+        ]
+        
+        NSLayoutConstraint.activate(pointsCollectionViewConstraints)
         
         pointsCollectionView.register(PointCollectionViewCell.self,
                                       forCellWithReuseIdentifier: PointCollectionViewCell.reuseIdentifier)
@@ -272,58 +285,60 @@ public final class GraphScene: SKScene {
         pointsCollectionView.dataSource = self
         pointsCollectionView.delegate = self
         
-        self.view?.addSubview(pointsCollectionView)
-    }
-    
-    private func setupLabels() {
-        let width: CGFloat = frameWidth * 0.95
-        let height: CGFloat = 20.0
+        NSLayoutConstraint.activate([
+            topStackView.leadingAnchor.constraint(equalTo: view.leadingAnchor),
+            topStackView.trailingAnchor.constraint(equalTo: view.trailingAnchor),
+            topStackView.topAnchor.constraint(equalTo: view.topAnchor)
+            ])
         
-        // TODO: maybe make every sum component in the color of the node?
-        
-        [sumLabel,
-         realLabel,
-         imaginaryLabel]
-            .enumerated()
-            .forEach {
-                $0.element.frame = CGRect(x: 140.0,//(frameWidth - width) * 0.5,
-                    y: 145.0 + CGFloat($0.offset * 25),
-                    width: width,
-                    height: height)
-                self.view?.addSubview($0.element)
-        }
+        topStackView.addArrangedSubview(pointsCollectionView)
     }
     
     private func setupSumComplexNumberView() {
-        view?.addSubview(sumBackgroundView)
+        [sumBackgroundView].forEach { view?.addSubview($0) }
+        sumBackgroundView.translatesAutoresizingMaskIntoConstraints = false
+        [sumComplexNumberView, realLabel, imaginaryLabel]
+            .forEach {
+                $0.translatesAutoresizingMaskIntoConstraints = false
+                sumBackgroundView.addSubview($0)
+        }
         
-        let width: CGFloat = 120.0
-        let height: CGFloat = 80.0
+        guard let view = view else { return }
+        let sumBackgroundConstraints: [NSLayoutConstraint] = [
+            sumBackgroundView.heightAnchor.constraint(equalToConstant: 80.0),
+            sumBackgroundView.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 10.0)
+        ]
         
-        let sumBackgroundViewFrame = CGRect(x: 10.0,
-                                            y: 140.0,
-                                            width: width,
-                                            height: height)
-        
-        sumBackgroundView.frame = sumBackgroundViewFrame
-        sumBackgroundView.addSubview(sumComplexNumberView)
-        
-        sumComplexNumberView.translatesAutoresizingMaskIntoConstraints = false
-        
-        let constraints: [NSLayoutConstraint] = [
-            sumComplexNumberView.leadingAnchor.constraint(equalTo: sumBackgroundView.leadingAnchor, constant: 10.0),
-            sumComplexNumberView.trailingAnchor.constraint(equalTo: sumBackgroundView.trailingAnchor, constant: 10.0),
+        let sumComplexNumberViewConstraints: [NSLayoutConstraint] = [
+            sumComplexNumberView.leadingAnchor.constraint(equalTo: sumBackgroundView.leadingAnchor, constant: 5.0),
+            sumComplexNumberView.topAnchor.constraint(equalTo: sumBackgroundView.topAnchor, constant: 10.0),
+            sumComplexNumberView.bottomAnchor.constraint(equalTo: sumBackgroundView.bottomAnchor, constant: -10.0),
             sumComplexNumberView.centerYAnchor.constraint(equalTo: sumBackgroundView.centerYAnchor)
         ]
-        NSLayoutConstraint.activate(constraints)
         
-        //        sumComplexNumberView.setupView(with: ComplexNumber(re: 5.0, im: 2.0))
+        let realLabelConstraints: [NSLayoutConstraint] = [
+            realLabel.leadingAnchor.constraint(equalTo: sumComplexNumberView.trailingAnchor, constant: 0.0),
+            realLabel.heightAnchor.constraint(equalToConstant: 20.0),
+            realLabel.centerYAnchor.constraint(equalTo: sumBackgroundView.centerYAnchor, constant: -10.0)
+        ]
+        
+        let imaginaryLabelConstraints: [NSLayoutConstraint] = [
+            imaginaryLabel.leadingAnchor.constraint(equalTo: realLabel.leadingAnchor, constant: 0.0),
+            imaginaryLabel.trailingAnchor.constraint(equalTo: sumBackgroundView.trailingAnchor, constant: -10.0),
+            imaginaryLabel.heightAnchor.constraint(equalToConstant: 20.0),
+            imaginaryLabel.centerYAnchor.constraint(equalTo: sumBackgroundView.centerYAnchor, constant: 10.0)
+        ]
+        
+        [sumBackgroundConstraints, sumComplexNumberViewConstraints, realLabelConstraints, imaginaryLabelConstraints]
+            .forEach { NSLayoutConstraint.activate($0) }
+        
+        topStackView.addArrangedSubview(sumBackgroundView)
+        
         sumBackgroundView.layer.cornerRadius = 5.0
     }
     
     @discardableResult
     private func plotComplexNumbersSum(_ plot: Bool = false) -> CGPoint {
-        //        print("sum: plot, \(#line)")
         let complexNumbers = complexNumbersPositions
             .map { transformPosition($0) }
         
@@ -344,31 +359,27 @@ public final class GraphScene: SKScene {
         
         let realPartsAttributedString = NSMutableAttributedString(string: "")
         let imaginaryPartsAttributedString = NSMutableAttributedString(string: "")
+        let font = realLabel.font ?? UIFont.systemFont(ofSize: 14.0)
+        let defaultAttributes: [NSAttributedString.Key: Any] = [.font: font, .foregroundColor: UIColor.black]
         
-        //        print("sum: \(sum), \(#line)")
         [realParts,
          imaginaryParts]
             .enumerated()
             .forEach {
                 for (index, part) in $0.element.enumerated() {
-                    let nodeColorAttributes: [NSAttributedString.Key: Any] = [
-                        .foregroundColor: complexNumbersSet.attributedPoint(for: index)?.nodeColor ?? .white
-                    ]
+                    let nodeColorAttributes: [NSAttributedString.Key: Any] = [.foregroundColor: complexNumbersSet.sortedSet[index].nodeColor]
                     let isReal = $0.offset == 0
                     if index == 0 {
                         let attributedString = NSAttributedString(string: "\(part)", attributes: nodeColorAttributes)
                         isReal ? realPartsAttributedString.append(attributedString) : imaginaryPartsAttributedString.append(attributedString)
                     } else {
                         let sign = part < 0 ? "-" : "+"
-                        let attributedString = NSMutableAttributedString(string: " \(sign)")
+                        let attributedString = NSMutableAttributedString(string: " \(sign)", attributes: defaultAttributes)
                         attributedString.append(NSAttributedString(string: " \(abs(part))", attributes: nodeColorAttributes))
                         isReal ? realPartsAttributedString.append(attributedString) : imaginaryPartsAttributedString.append(attributedString)
                     }
                 }
         }
-        
-        let font = realLabel.font ?? UIFont.systemFont(ofSize: 14.0)
-        let defaultAttributes: [NSAttributedString.Key: Any] = [NSAttributedString.Key.font: font]
         
         let realAttributedString = NSMutableAttributedString(string: "real: ", attributes: defaultAttributes)
         realAttributedString.append(realPartsAttributedString)
