@@ -86,7 +86,7 @@ public final class GraphScene: SKScene {
     private let realLabel: UILabel = {
         let realLabel = UILabel(frame: .zero)
         realLabel.textColor = .white
-        
+        realLabel.font = realLabel.font.withSize(15.0)
         return realLabel
     }()
     
@@ -323,6 +323,7 @@ public final class GraphScene: SKScene {
     
     @discardableResult
     private func plotComplexNumbersSum(_ plot: Bool = false) -> CGPoint {
+        //        print("sum: plot, \(#line)")
         let complexNumbers = complexNumbersPositions
             .map { transformPosition($0) }
         
@@ -341,60 +342,40 @@ public final class GraphScene: SKScene {
         let imaginaryParts = complexNumbers
             .compactMap { $0.imaginaryPart }
         
-        var realPartsString = ""
-        var imaginaryPartsString = ""
+        let realPartsAttributedString = NSMutableAttributedString(string: "")
+        let imaginaryPartsAttributedString = NSMutableAttributedString(string: "")
         
+        //        print("sum: \(sum), \(#line)")
         [realParts,
          imaginaryParts]
             .enumerated()
             .forEach {
                 for (index, part) in $0.element.enumerated() {
+                    let nodeColorAttributes: [NSAttributedString.Key: Any] = [
+                        .foregroundColor: complexNumbersSet.attributedPoint(for: index)?.nodeColor ?? .white
+                    ]
                     let isReal = $0.offset == 0
                     if index == 0 {
-                        isReal ?
-                            realPartsString.append("\(part)") :
-                            imaginaryPartsString.append("\(part)")
+                        let attributedString = NSAttributedString(string: "\(part)", attributes: nodeColorAttributes)
+                        isReal ? realPartsAttributedString.append(attributedString) : imaginaryPartsAttributedString.append(attributedString)
                     } else {
                         let sign = part < 0 ? "-" : "+"
-                        isReal ?
-                            realPartsString.append(" \(sign)" + " \(abs(part))") :
-                            imaginaryPartsString.append(" \(sign)" + " \(abs(part))")
+                        let attributedString = NSMutableAttributedString(string: " \(sign)")
+                        attributedString.append(NSAttributedString(string: " \(abs(part))", attributes: nodeColorAttributes))
+                        isReal ? realPartsAttributedString.append(attributedString) : imaginaryPartsAttributedString.append(attributedString)
                     }
                 }
         }
         
-        let sumString = "sum: \(sum.description)"
-        //        let realPartsWithDescription = "real: \(realPartsString)"
-        //        let imaginaryPartsWithDescription = "im: \(imaginaryPartsString)"
-        
-        let font = realLabel.font
+        let font = realLabel.font ?? UIFont.systemFont(ofSize: 14.0)
         let defaultAttributes: [NSAttributedString.Key: Any] = [NSAttributedString.Key.font: font]
-        let greenTextAttributes: [NSAttributedString.Key: Any] = [.foregroundColor: UIColor.nodesColors[2],
-                                                                  .font: UIFont.systemFont(ofSize: font?.pointSize ?? 15.0, weight: .bold)]
-        let orangeTextAttributes: [NSAttributedString.Key: Any] = [.foregroundColor: UIColor.nodesColors[4],
-                                                                   .font: UIFont.systemFont(ofSize: font?.pointSize ?? 15.0, weight: .bold)]
         
-        let realAttributedString = NSMutableAttributedString(string: "real: ",
-                                                             attributes: defaultAttributes)
-        let realPartAttributedString = NSAttributedString(string: realPartsString,
-                                                          attributes: greenTextAttributes)
-        realAttributedString.append(realPartAttributedString)
+        let realAttributedString = NSMutableAttributedString(string: "real: ", attributes: defaultAttributes)
+        realAttributedString.append(realPartsAttributedString)
         
-        let imaginaryAttributedString = NSMutableAttributedString(string: "imaginary: ",
-                                                                  attributes: defaultAttributes)
-        let imaginaryPartAttributedString = NSAttributedString(string: imaginaryPartsString,
-                                                               attributes: orangeTextAttributes)
+        let imaginaryAttributedString = NSMutableAttributedString(string: "imaginary: ", attributes: defaultAttributes)
+        imaginaryAttributedString.append(imaginaryPartsAttributedString)
         
-        let sumAttributedString = NSMutableAttributedString(string: "sum: ", attributes: defaultAttributes)
-        let realPartSumAttributedString = NSAttributedString(string: "\(sum.realPart?.rounded(2) ?? 0.0)", attributes: greenTextAttributes)
-        let signAttributedString = NSAttributedString(string: (sum.imaginaryPart ?? 0.0) < 0.0 ? " - " : " + ", attributes: defaultAttributes)
-        let imaginaryPartSumAttributedString = NSAttributedString(string: "\(abs(sum.imaginaryPart?.rounded(2) ?? 0.0))i", attributes: orangeTextAttributes)
-        sumAttributedString.append(realPartSumAttributedString)
-        sumAttributedString.append(signAttributedString)
-        sumAttributedString.append(imaginaryPartSumAttributedString)
-        
-        imaginaryAttributedString.append(imaginaryPartAttributedString)
-        sumLabel.attributedText = sumAttributedString
         realLabel.attributedText = realAttributedString
         imaginaryLabel.attributedText = imaginaryAttributedString
         
@@ -711,6 +692,7 @@ extension GraphScene: UICollectionViewDelegate {
         plot()
         
         if complexNumbersSet.reachedMaxNumberOfElements {
+            updateSumPosition()
             collectionView.reloadData()
             return
         }

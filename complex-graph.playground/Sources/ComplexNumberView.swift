@@ -52,7 +52,7 @@ final class ComplexNumberView: UIView {
         complexNumberLabel.text = complexNumber.description
         modulusLabel.text = complexNumber.modulusDescription
         angleLabel.text = complexNumber.degreesDescription
-        print("SETUP VIEW")
+        //        print("SETUP VIEW")
     }
     
     private func addSubviews() {
