@@ -21,6 +21,14 @@ final class SumVectorView: UIView {
         return imaginaryLabel
     }()
     
+    let labelsStackView: UIStackView = {
+        let labelsStackView = UIStackView(frame: .zero)
+        labelsStackView.axis = .vertical
+        labelsStackView.spacing = 5.0
+        
+        return labelsStackView
+    }()
+    
     public override init(frame: CGRect) {
         super.init(frame: frame)
         
@@ -62,10 +70,10 @@ final class SumVectorView: UIView {
                 }
         }
         
-        let realAttributedString = NSMutableAttributedString(string: "real: ", attributes: defaultAttributes)
+        let realAttributedString = NSMutableAttributedString(string: "Re: ", attributes: defaultAttributes)
         realAttributedString.append(realPartsAttributedString)
         
-        let imaginaryAttributedString = NSMutableAttributedString(string: "imaginary: ", attributes: defaultAttributes)
+        let imaginaryAttributedString = NSMutableAttributedString(string: "Im: ", attributes: defaultAttributes)
         imaginaryAttributedString.append(imaginaryPartsAttributedString)
         
         realLabel.attributedText = realAttributedString
@@ -75,12 +83,13 @@ final class SumVectorView: UIView {
     }
     
     private func addSubviews() {
-        [sumComplexNumberView, realLabel, imaginaryLabel]
-            .forEach { addSubview($0) }
+        [sumComplexNumberView, labelsStackView].forEach { addSubview($0) }
+        
+        [realLabel, imaginaryLabel].forEach { labelsStackView.addArrangedSubview($0) }
     }
     
     private func setupConstraints() {
-        [self, sumComplexNumberView, realLabel, imaginaryLabel]
+        [self, sumComplexNumberView, realLabel, imaginaryLabel, labelsStackView]
             .forEach { $0.translatesAutoresizingMaskIntoConstraints = false }
         
         let constraints: [NSLayoutConstraint] = [
@@ -88,26 +97,22 @@ final class SumVectorView: UIView {
             ]
         
         let sumComplexNumberViewConstraints: [NSLayoutConstraint] = [
-            sumComplexNumberView.leadingAnchor.constraint(equalTo: self.leadingAnchor, constant: 5.0),
-            sumComplexNumberView.topAnchor.constraint(equalTo: self.topAnchor, constant: 10.0),
-            sumComplexNumberView.bottomAnchor.constraint(equalTo: self.bottomAnchor, constant: -10.0),
-            sumComplexNumberView.centerYAnchor.constraint(equalTo: self.centerYAnchor)
+            sumComplexNumberView.leadingAnchor.constraint(equalTo: leadingAnchor, constant: 5.0),
+            sumComplexNumberView.topAnchor.constraint(equalTo: topAnchor, constant: 10.0),
+            sumComplexNumberView.bottomAnchor.constraint(equalTo: bottomAnchor, constant: -10.0),
+            sumComplexNumberView.centerYAnchor.constraint(equalTo: centerYAnchor)
         ]
         
-        let realLabelConstraints: [NSLayoutConstraint] = [
-            realLabel.leadingAnchor.constraint(equalTo: sumComplexNumberView.trailingAnchor, constant: 0.0),
-            realLabel.heightAnchor.constraint(equalToConstant: 20.0),
-            realLabel.centerYAnchor.constraint(equalTo: self.centerYAnchor, constant: -10.0)
+        let labelsStackViewConstraints: [NSLayoutConstraint] = [
+            labelsStackView.leadingAnchor.constraint(equalTo: sumComplexNumberView.trailingAnchor, constant: 10.0),
+            labelsStackView.centerYAnchor.constraint(equalTo: centerYAnchor),
+            labelsStackView.trailingAnchor.constraint(equalTo: trailingAnchor, constant: -10.0)
         ]
         
-        let imaginaryLabelConstraints: [NSLayoutConstraint] = [
-            imaginaryLabel.leadingAnchor.constraint(equalTo: realLabel.leadingAnchor, constant: 0.0),
-            imaginaryLabel.trailingAnchor.constraint(equalTo: self.trailingAnchor, constant: -10.0),
-            imaginaryLabel.heightAnchor.constraint(equalToConstant: 20.0),
-            imaginaryLabel.centerYAnchor.constraint(equalTo: self.centerYAnchor, constant: 10.0)
-        ]
+        let realLabelConstraints: [NSLayoutConstraint] = [realLabel.heightAnchor.constraint(equalToConstant: 20.0)]
+        let imaginaryLabelConstraints: [NSLayoutConstraint] = [imaginaryLabel.heightAnchor.constraint(equalToConstant: 20.0)]
         
-        [constraints, sumComplexNumberViewConstraints, realLabelConstraints, imaginaryLabelConstraints]
+        [constraints, sumComplexNumberViewConstraints, realLabelConstraints, imaginaryLabelConstraints, labelsStackViewConstraints]
             .forEach { NSLayoutConstraint.activate($0) }
     }
     

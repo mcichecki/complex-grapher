@@ -5,6 +5,8 @@ final class ComplexNumberView: UIView {
         let labelsStackView = UIStackView(frame: .zero)
         labelsStackView.axis = .vertical
         labelsStackView.spacing = 5.0
+        labelsStackView.translatesAutoresizingMaskIntoConstraints = false
+        
         return labelsStackView
     }()
     
@@ -12,6 +14,7 @@ final class ComplexNumberView: UIView {
         let complexNumberLabel = UILabel(frame: .zero)
         complexNumberLabel.font = UIFont.systemFont(ofSize: 14.0)
         complexNumberLabel.textColor = isDarkModeEnabled ? .black : .white
+        complexNumberLabel.translatesAutoresizingMaskIntoConstraints = false
         
         return complexNumberLabel
     }()
@@ -20,6 +23,7 @@ final class ComplexNumberView: UIView {
         let modulusLabel = UILabel(frame: .zero)
         modulusLabel.font = UIFont.systemFont(ofSize: 14.0)
         modulusLabel.textColor = isDarkModeEnabled ? .black : .white
+        modulusLabel.translatesAutoresizingMaskIntoConstraints = false
         
         return modulusLabel
     }()
@@ -28,6 +32,7 @@ final class ComplexNumberView: UIView {
         let angleLabel = UILabel(frame: .zero)
         angleLabel.font = UIFont.systemFont(ofSize: 14.0)
         angleLabel.textColor = isDarkModeEnabled ? .black : .white
+        angleLabel.translatesAutoresizingMaskIntoConstraints = false
         
         return angleLabel
     }()
@@ -55,23 +60,18 @@ final class ComplexNumberView: UIView {
     
     private func addSubviews() {
         addSubview(labelsStackView)
-        labelsStackView.translatesAutoresizingMaskIntoConstraints = false
         
-        [complexNumberLabel, modulusLabel, angleLabel]
-            .forEach {
-                $0.translatesAutoresizingMaskIntoConstraints = false
-                labelsStackView.addArrangedSubview($0)
-        }
+        [complexNumberLabel, modulusLabel, angleLabel].forEach { labelsStackView.addArrangedSubview($0) }
     }
     
     private func setupConstraints() {
         let labelConstraints = [complexNumberLabel.widthAnchor.constraint(greaterThanOrEqualToConstant: 100.0)]
         
         let stackViewConstraints = [
-            labelsStackView.topAnchor.constraint(equalTo: self.topAnchor),
-            labelsStackView.leadingAnchor.constraint(equalTo: self.leadingAnchor),
-            labelsStackView.trailingAnchor.constraint(equalTo: self.trailingAnchor),
-            labelsStackView.bottomAnchor.constraint(equalTo: self.bottomAnchor)
+            labelsStackView.topAnchor.constraint(equalTo: topAnchor),
+            labelsStackView.leadingAnchor.constraint(equalTo: leadingAnchor),
+            labelsStackView.trailingAnchor.constraint(equalTo: trailingAnchor),
+            labelsStackView.bottomAnchor.constraint(equalTo: bottomAnchor)
         ]
         
         [labelConstraints,

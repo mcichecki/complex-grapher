@@ -17,7 +17,8 @@ extension UIColor {
         .rgb(104, 109, 224), // lightPurple
         .rgb(240, 147, 43), // orange
         .rgb(126, 214, 223), // turqoise
-        .rgb(19, 15, 64), // navy
+        //        .rgb(19, 15, 64), // navy
+        .rgb(52, 152, 219), // blue
         .rgb(190, 46, 221), // pink
     ]
     
