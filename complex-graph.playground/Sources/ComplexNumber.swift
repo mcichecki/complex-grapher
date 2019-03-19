@@ -5,7 +5,7 @@ public struct ComplexNumber {
     
     public let imaginaryPart: Double?
     
-    public init(re realPart: Double?, im imaginaryPart: Double?) {
+    public init(re realPart: Double = 0.0, im imaginaryPart: Double = 0.0) {
         self.realPart = realPart
         self.imaginaryPart = imaginaryPart
     }

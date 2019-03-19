@@ -3,42 +3,21 @@ import SpriteKit
 
 public final class GraphScene: SKScene {
     private let frameWidth: CGFloat
-    
     private let frameHeight: CGFloat
-    
     private let complexNumbersList = ComplexNumbersList()
-    
     private let dashedPatter: [CGFloat] = [10.0, 8.0]
-    
     private let lengthOfAxis: CGFloat = 700.0
-    
     private let offset = CGPoint(x: 0.0, y: -100.0)
-    
     private let positionLabelOffset = CGPoint(x: 0.0, y: 15.0)
-    
+    private let sumVectorView = SumVectorView(frame: .zero)
+    private var complexNumbersPositions: [CGPoint] = []
+    private var activePointName: String?
+    private var pointTouch: UITouch?
+    private var throttle = 0
     private lazy var speechSynthesizer = SpeechSynthesizer()
     
     private lazy var centerOfAxes: CGPoint = {
         return CGPoint(x: centerPoint.x + offset.x, y: centerPoint.y + offset.y)
-    }()
-    
-    private var complexNumbersPositions: [CGPoint] = []
-    
-    private var activePointName: String?
-    
-    private var pointTouch: UITouch?
-    
-    private var throttle = 0
-    
-    private var sumBackgroundView: UIView = {
-        let view = UIView(frame: .zero)
-        view.backgroundColor = .white
-        return view
-    }()
-    
-    private var sumComplexNumberView: ComplexNumberView = {
-        let sumComplexNumberView = ComplexNumberView(frame: .zero, isDarkModeEnabled: true)
-        return sumComplexNumberView
     }()
     
     private lazy var centerPoint: CGPoint = {
@@ -73,31 +52,9 @@ public final class GraphScene: SKScene {
         pointsCollectionView.backgroundColor = .clear
         pointsCollectionView.isUserInteractionEnabled = true
         pointsCollectionView.translatesAutoresizingMaskIntoConstraints = false
+        pointsCollectionView.alwaysBounceHorizontal = true
         
         return pointsCollectionView
-    }()
-    
-    private let sumLabel: UILabel = {
-        let sumLabel = UILabel(frame: .zero)
-        //        sumLabel.text = "sum: (1.5 + 2.0) + (2.0 + 2.5)i = 3.5 + 4.5i"
-        sumLabel.textColor = .white
-        
-        return sumLabel
-    }()
-    
-    private let realLabel: UILabel = {
-        let realLabel = UILabel(frame: .zero)
-        realLabel.textColor = .white
-        realLabel.font = realLabel.font.withSize(15.0)
-        return realLabel
-    }()
-    
-    private let imaginaryLabel: UILabel = {
-        let imaginaryLabel = UILabel(frame: .zero)
-        imaginaryLabel.textColor = .white
-        imaginaryLabel.font = imaginaryLabel.font.withSize(15.0)
-        
-        return imaginaryLabel
     }()
     
     private let topStackView: UIStackView = {
@@ -146,9 +103,7 @@ public final class GraphScene: SKScene {
     //    }
     
     public func plot(complexNumber: ComplexNumber? = nil, withArc: Bool = false) {
-        guard let attributedPoint = complexNumbersList.add() else {
-            return
-        }
+        guard let attributedPoint = complexNumbersList.add() else { return }
         
         let yAbsoluteOffset = abs(offset.y)
         let startingXPoint = CGFloat.random(in: frameWidth * 0.2...frameWidth * 0.8)
@@ -163,20 +118,18 @@ public final class GraphScene: SKScene {
         
         let pointNode = PointNode(radius: 10.0, position: startingPoint)
         pointNode.name = attributedPoint.complexNumberNodeName
-        //        print("new name: \(attributedPoint.complexNumberNodeName)")
         pointNode.zPosition = 5.0
         pointNode.fillColor = attributedPoint.nodeColor
-        
         
         let vectorPath = CGMutablePath()
         vectorPath.move(to: centerOfAxes)
         vectorPath.addLine(to: startingPoint)
+        
         let vectorNode = SKShapeNode(path: vectorPath)
         vectorNode.strokeColor = attributedPoint.nodeColor
         vectorNode.name = attributedPoint.vectorNumberNodeName
         
-        [pointNode, vectorNode]
-            .forEach(addChild(_:))
+        [pointNode, vectorNode].forEach(addChild(_:))
         
         complexNumbersPositions.append(pointNode.position)
         activePointName = attributedPoint.complexNumberNodeName
@@ -187,7 +140,7 @@ public final class GraphScene: SKScene {
             positionLabelNode.text = ""
             addChild(positionLabelNode)
         case 2:
-            plotComplexNumbersSum(true)
+            plotComplexNumbersSumIfNeeded(true)
         default:
             return
         }
@@ -199,25 +152,18 @@ public final class GraphScene: SKScene {
         let radius = CGFloat(complexNumber.modulus) * AxisNode.scaleOffset * 0.5
         
         let arcPath = UIBezierPath(arcCenter: centerOfAxes, radius: radius,
-                                   startAngle: 0, endAngle: endAngle,
-                                   clockwise: true)
+                                   startAngle: 0, endAngle: endAngle, clockwise: true)
         let arcDashedPath = arcPath.cgPath.copy(dashingWithPhase: 1.0, lengths: dashedPatter)
         let arcNode = SKShapeNode(path: arcDashedPath)
         arcNode.alpha = 0.5
         arcNode.name = NodeName.arcNode.rawValue
-        addChild(arcNode)
-        
-        let cosAlpha = cos(endAngle)
-        let sinAlpha = sin(endAngle)
-        let xPoint = cosAlpha * radius
-        let yPoint = sinAlpha * radius
         
         // arc label
-        let labelPosition = CGPoint(x: centerOfAxes.x + xPoint, y: centerOfAxes.y + yPoint)
+        let labelPosition = centerOfAxes + endAngle.offset(radius: radius)
         arcLabelNode.text = complexNumber.degreesDescription
         arcLabelNode.position = labelPosition
         
-        addChild(arcLabelNode)
+        [arcNode, arcLabelNode].forEach(addChild(_:))
     }
     
     private func plotSum(_ complexNumber: ComplexNumber) {
@@ -228,15 +174,14 @@ public final class GraphScene: SKScene {
         pointNode.zPosition = 5.0
         pointNode.fillColor = .white
         
-        addChild(pointNode)
-        
         let vectorPath = CGMutablePath()
         vectorPath.move(to: centerOfAxes)
         vectorPath.addLine(to: startingPoint)
+        
         let vectorNode = SKShapeNode(path: vectorPath)
         vectorNode.name = NodeName.sumVectorNode.rawValue
         
-        addChild(vectorNode)
+        [pointNode, vectorNode].forEach(addChild(_:))
     }
     
     private func setupScene() {
@@ -252,142 +197,53 @@ public final class GraphScene: SKScene {
         let yAxisNode = AxisNode(length: lengthOfAxis, center: centerOfAxes, orientation: .vertical)
         yAxisNode.name = NodeName.yAxis.rawValue
         
-        [xAxisNode, yAxisNode]
-            .forEach {
-                addChild($0)
-                $0.isUserInteractionEnabled = false
-        }
+        [xAxisNode, yAxisNode].forEach(addChild(_:))
     }
     
     private func setupCollectionView() {
         view?.addSubview(topStackView)
         
-        pointsCollectionView.alwaysBounceHorizontal = true
-        pointsCollectionView.translatesAutoresizingMaskIntoConstraints = false
-        
         guard let view = view else { return }
         
-        let pointsCollectionViewConstraints: [NSLayoutConstraint] = [
+        pointsCollectionView.register(PointCollectionViewCell.self, forCellWithReuseIdentifier: PointCollectionViewCell.reuseIdentifier)
+        pointsCollectionView.register(AddPointCollectionViewCell.self, forCellWithReuseIdentifier: AddPointCollectionViewCell.reuseIdentifier)
+        pointsCollectionView.dataSource = self
+        pointsCollectionView.delegate = self
+        
+        let pointsCollectionViewConstraints = [
             pointsCollectionView.heightAnchor.constraint(equalToConstant: 100.0),
             pointsCollectionView.widthAnchor.constraint(equalToConstant: frameWidth)
         ]
         
-        NSLayoutConstraint.activate(pointsCollectionViewConstraints)
-        
-        pointsCollectionView.register(PointCollectionViewCell.self,
-                                      forCellWithReuseIdentifier: PointCollectionViewCell.reuseIdentifier)
-        pointsCollectionView.register(AddPointCollectionViewCell.self,
-                                      forCellWithReuseIdentifier: AddPointCollectionViewCell.reuseIdentifier)
-        
-        pointsCollectionView.dataSource = self
-        pointsCollectionView.delegate = self
-        
-        NSLayoutConstraint.activate([
+        let topStackViewConstraints = [
             topStackView.leadingAnchor.constraint(equalTo: view.leadingAnchor),
             topStackView.trailingAnchor.constraint(equalTo: view.trailingAnchor),
             topStackView.topAnchor.constraint(equalTo: view.topAnchor)
-            ])
+        ]
+        
+        NSLayoutConstraint.activate(pointsCollectionViewConstraints + topStackViewConstraints)
         
         topStackView.addArrangedSubview(pointsCollectionView)
     }
     
     private func setupSumComplexNumberView() {
-        [sumBackgroundView].forEach { view?.addSubview($0) }
-        sumBackgroundView.translatesAutoresizingMaskIntoConstraints = false
-        [sumComplexNumberView, realLabel, imaginaryLabel]
-            .forEach {
-                $0.translatesAutoresizingMaskIntoConstraints = false
-                sumBackgroundView.addSubview($0)
-        }
+        sumVectorView.translatesAutoresizingMaskIntoConstraints = false
+        topStackView.addArrangedSubview(sumVectorView)
         
         guard let view = view else { return }
-        let sumBackgroundConstraints: [NSLayoutConstraint] = [
-            sumBackgroundView.heightAnchor.constraint(equalToConstant: 80.0),
-            sumBackgroundView.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 10.0)
-        ]
-        
-        let sumComplexNumberViewConstraints: [NSLayoutConstraint] = [
-            sumComplexNumberView.leadingAnchor.constraint(equalTo: sumBackgroundView.leadingAnchor, constant: 5.0),
-            sumComplexNumberView.topAnchor.constraint(equalTo: sumBackgroundView.topAnchor, constant: 10.0),
-            sumComplexNumberView.bottomAnchor.constraint(equalTo: sumBackgroundView.bottomAnchor, constant: -10.0),
-            sumComplexNumberView.centerYAnchor.constraint(equalTo: sumBackgroundView.centerYAnchor)
-        ]
-        
-        let realLabelConstraints: [NSLayoutConstraint] = [
-            realLabel.leadingAnchor.constraint(equalTo: sumComplexNumberView.trailingAnchor, constant: 0.0),
-            realLabel.heightAnchor.constraint(equalToConstant: 20.0),
-            realLabel.centerYAnchor.constraint(equalTo: sumBackgroundView.centerYAnchor, constant: -10.0)
-        ]
-        
-        let imaginaryLabelConstraints: [NSLayoutConstraint] = [
-            imaginaryLabel.leadingAnchor.constraint(equalTo: realLabel.leadingAnchor, constant: 0.0),
-            imaginaryLabel.trailingAnchor.constraint(equalTo: sumBackgroundView.trailingAnchor, constant: -10.0),
-            imaginaryLabel.heightAnchor.constraint(equalToConstant: 20.0),
-            imaginaryLabel.centerYAnchor.constraint(equalTo: sumBackgroundView.centerYAnchor, constant: 10.0)
-        ]
-        
-        [sumBackgroundConstraints, sumComplexNumberViewConstraints, realLabelConstraints, imaginaryLabelConstraints]
-            .forEach { NSLayoutConstraint.activate($0) }
-        
-        topStackView.addArrangedSubview(sumBackgroundView)
-        
-        sumBackgroundView.layer.cornerRadius = 5.0
+        NSLayoutConstraint.activate([sumVectorView.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 10.0)])
+        sumVectorView.isHidden = complexNumbersList.numberOfPoints < 2
     }
     
     @discardableResult
-    private func plotComplexNumbersSum(_ plot: Bool = false) -> CGPoint {
-        let complexNumbers = complexNumbersPositions
-            .map { transformPosition($0) }
-        
-        let sum = complexNumbers
-            .reduce(ComplexNumber(re: 0.0, im: 0.0)) { (result, complexNumber) in
-                return result + complexNumber
-        }
-        
+    private func plotComplexNumbersSumIfNeeded(_ plot: Bool = false) -> CGPoint {
+        let complexNumbers = complexNumbersPositions.map { transformPosition($0) }
+        let sum = complexNumbers.sum
         if plot {
             plotSum(sum)
         }
         
-        let realParts = complexNumbers
-            .compactMap { $0.realPart }
-        
-        let imaginaryParts = complexNumbers
-            .compactMap { $0.imaginaryPart }
-        
-        let realPartsAttributedString = NSMutableAttributedString(string: "")
-        let imaginaryPartsAttributedString = NSMutableAttributedString(string: "")
-        let font = realLabel.font ?? UIFont.systemFont(ofSize: 14.0)
-        let defaultAttributes: [NSAttributedString.Key: Any] = [.font: font, .foregroundColor: UIColor.black]
-        
-        [realParts,
-         imaginaryParts]
-            .enumerated()
-            .forEach {
-                for (index, part) in $0.element.enumerated() {
-                    let nodeColorAttributes: [NSAttributedString.Key: Any] = [.foregroundColor: complexNumbersList.list[index].nodeColor]
-                    let isReal = $0.offset == 0
-                    if index == 0 {
-                        let attributedString = NSAttributedString(string: "\(part)", attributes: nodeColorAttributes)
-                        isReal ? realPartsAttributedString.append(attributedString) : imaginaryPartsAttributedString.append(attributedString)
-                    } else {
-                        let sign = part < 0 ? "-" : "+"
-                        let attributedString = NSMutableAttributedString(string: " \(sign)", attributes: defaultAttributes)
-                        attributedString.append(NSAttributedString(string: " \(abs(part))", attributes: nodeColorAttributes))
-                        isReal ? realPartsAttributedString.append(attributedString) : imaginaryPartsAttributedString.append(attributedString)
-                    }
-                }
-        }
-        
-        let realAttributedString = NSMutableAttributedString(string: "real: ", attributes: defaultAttributes)
-        realAttributedString.append(realPartsAttributedString)
-        
-        let imaginaryAttributedString = NSMutableAttributedString(string: "imaginary: ", attributes: defaultAttributes)
-        imaginaryAttributedString.append(imaginaryPartsAttributedString)
-        
-        realLabel.attributedText = realAttributedString
-        imaginaryLabel.attributedText = imaginaryAttributedString
-        
-        sumComplexNumberView.setupView(with: sum)
+        sumVectorView.configure(with: complexNumbers, colors: complexNumbersList.list.map { $0.nodeColor })
         
         return transformComplexNumber(sum)
     }
@@ -406,21 +262,13 @@ public final class GraphScene: SKScene {
             pointsCollectionView.reloadItems(at: [indexPathToBeReloaded])
         }
         
-        // update sum, do we need this if?
-        if complexNumbersList.numberOfPoints > 1 {
-            updateSumPosition()
-        } else {
-            childNode(withName: NodeName.sumNumber.rawValue)?.removeFromParent()
-            childNode(withName: NodeName.sumVectorNode.rawValue)?.removeFromParent()
-        }
+        updateSumPosition()
     }
     
     private func updateSumPosition() {
-        let sumPosition = plotComplexNumbersSum()
+        let sumPosition = plotComplexNumbersSumIfNeeded()
         
-        guard let sumNode = childNode(withName: NodeName.sumNumber.rawValue) else {
-            return
-        }
+        guard let sumNode = childNode(withName: NodeName.sumNumber.rawValue) else { return }
         
         let newPath = CGMutablePath()
         newPath.move(to: centerOfAxes)
@@ -431,8 +279,9 @@ public final class GraphScene: SKScene {
             vectorNode.path = newPath
         }
         
-        let numberOfComplexNumbers = complexNumbersPositions.count
+        sumVectorView.isHidden = complexNumbersList.numberOfPoints < 2
         
+        let numberOfComplexNumbers = complexNumbersPositions.count
         switch numberOfComplexNumbers {
         case 2: // two nodes = sum vectors
             if childNode(withName: NodeName.firstSumVector.rawValue) == nil || childNode(withName: NodeName.secondSumVector.rawValue) == nil {
@@ -483,15 +332,13 @@ public final class GraphScene: SKScene {
             let sumVectorNode = childNode(withName: NodeName.sumVectorNode.rawValue)
             let sumVectorPoint = childNode(withName: NodeName.sumNumber.rawValue)
             
-            [sumVectorNode, sumVectorPoint]
-                .forEach { $0?.removeFromParent() }
+            [sumVectorNode, sumVectorPoint].forEach { $0?.removeFromParent() }
             fallthrough
         default:
             let firstSumVector = childNode(withName: NodeName.firstSumVector.rawValue)
             let secondSumVector = childNode(withName: NodeName.secondSumVector.rawValue)
             
-            [firstSumVector, secondSumVector]
-                .forEach { $0?.removeFromParent() }
+            [firstSumVector, secondSumVector].forEach { $0?.removeFromParent() }
         }
         
         sumNode.position = sumPosition
@@ -509,6 +356,7 @@ public final class GraphScene: SKScene {
         let zPosition = CGPoint(x: transformedPosition.x / divisor,
                                 y: transformedPosition.y / divisor)
         
+        // TODO: REMOVE
         //        print("og position: \(position)")
         //        print("transformed position: \(transformedPosition)")
         //        print("z position: \(zPosition)")
@@ -526,6 +374,7 @@ public final class GraphScene: SKScene {
         let graphPosition = CGPoint(x: multipledPosition.x + centerOfAxes.x,
                                     y: multipledPosition.y + centerOfAxes.y)
         
+        // TODO: REMOVE
         //        print("complexNumber: x: \(complexNumber.realPart) + y: \(complexNumber.imaginaryPart)")
         //        print("mult position: \(multipledPosition)")
         //        print("graph position: \(graphPosition)")
@@ -553,17 +402,13 @@ extension GraphScene {
     }
     
     public override func touchesMoved(_ touches: Set<UITouch>, with event: UIEvent?) {
-        guard let pointTouch = pointTouch else {
-            return
-        }
+        guard let pointTouch = pointTouch else { return }
         
         //        print("=== touches moved")
         for touch in touches where touch == pointTouch {
             let location = touch.location(in: self)
             guard let activePointName = activePointName,
-                let movedNode = childNode(withName: activePointName) else {
-                    return
-            }
+                let movedNode = childNode(withName: activePointName) else { return }
             
             let newPath = CGMutablePath()
             newPath.move(to: centerOfAxes)
@@ -582,7 +427,6 @@ extension GraphScene {
                 .compactMap { childNode(withName: $0) }
                 .forEach { $0.isHidden = false }
             
-            
             updateLabels(with: movedNode.position)
             
             movedNode.position = location
@@ -592,18 +436,14 @@ extension GraphScene {
     }
     
     public override func touchesEnded(_ touches: Set<UITouch>, with event: UIEvent?) {
-        guard let pointTouch = pointTouch else {
-            return
-        }
+        guard let pointTouch = pointTouch else { return }
         
         print("=== touches ended")
         
         for touch in touches where touch == pointTouch {
             self.pointTouch = nil
             
-            guard let movedNode = childNode(withName: activePointName ?? "") else {
-                return
-            }
+            guard let movedNode = childNode(withName: activePointName ?? "") else { return }
             
             updateLabels(with: movedNode.position)
             updatePosition(movedNode.position, force: true)
@@ -628,11 +468,7 @@ extension GraphScene {
         
         // arc label
         if let arcLabel = childNode(withName: NodeName.arcLabel.rawValue) as? SKLabelNode {
-            let cosAlpha = cos(endAngle)
-            let sinAlpha = sin(endAngle)
-            let xPoint = cosAlpha * radius
-            let yPoint = sinAlpha * radius
-            let labelPosition = CGPoint(x: centerOfAxes.x + xPoint, y: centerOfAxes.y + yPoint)
+            let labelPosition = centerOfAxes + endAngle.offset(radius: radius)
             arcLabel.text = complexNumber.degreesDescription
             arcLabel.position = labelPosition
         }
@@ -668,8 +504,7 @@ extension GraphScene: UICollectionViewDataSource {
         guard (indexPath.section != 0 ||
             complexNumbersList.reachedMaxNumberOfElements) else {
                 let pointCellIdentifier = AddPointCollectionViewCell.reuseIdentifier
-                let dequeuedCell = collectionView.dequeueReusableCell(withReuseIdentifier: pointCellIdentifier,
-                                                                      for: indexPath)
+                let dequeuedCell = collectionView.dequeueReusableCell(withReuseIdentifier: pointCellIdentifier, for: indexPath)
                 
                 guard let cell = dequeuedCell as? AddPointCollectionViewCell else {
                     fatalError("Could not dequeue a cell")
@@ -679,23 +514,17 @@ extension GraphScene: UICollectionViewDataSource {
         }
         
         let pointCellIdentifier = PointCollectionViewCell.reuseIdentifier
-        let dequeuedCell = collectionView.dequeueReusableCell(withReuseIdentifier: pointCellIdentifier,
-                                                              for: indexPath)
+        let dequeuedCell = collectionView.dequeueReusableCell(withReuseIdentifier: pointCellIdentifier, for: indexPath)
         
         guard let cell = dequeuedCell as? PointCollectionViewCell else {
             fatalError("Could not dequeue a cell")
         }
         
-        //        guard let position = complexNumbers[indexPath.item] else {
-        //            print("complexNumbers: \(complexNumbers)")
-        //            fatalError("No complex number for \(indexPath.item)")
-        //        }
         guard indexPath.item <= complexNumbersPositions.count - 1 else {
             fatalError("No complex number for \(indexPath.item)")
         }
         
         let position = complexNumbersPositions[indexPath.item]
-        
         cell.tag = indexPath.item
         cell.delegate = self
         cell.setupCell(with: transformPosition(position), color: complexNumbersList.list[indexPath.item].nodeColor)
@@ -735,14 +564,8 @@ extension GraphScene: UICollectionViewDelegate {
 
 extension GraphScene: PointCollectionViewCellDelegate {
     func didTapRemove(_ cell: PointCollectionViewCell, item: Int) {
-        let activeIndex = complexNumbersList.indexForPoint(activePointName ?? "")
-        print("remove: \(item), active: \(activeIndex)")
-        
         // TODO: fix
-        complexNumbersList.remove(at: item)
-            .forEach {
-                childNode(withName: $0)?.removeFromParent()
-        }
+        complexNumbersList.remove(at: item).forEach { childNode(withName: $0)?.removeFromParent() }
         
         let nodes = [
             NodeName.arcNode,
