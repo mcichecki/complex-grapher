@@ -47,12 +47,10 @@ final class ComplexNumberView: UIView {
         fatalError("init(coder:) has not been implemented")
     }
     
-    // TODO: check if it is not called every time we move complex number
     public func setupView(with complexNumber: ComplexNumber) {
         complexNumberLabel.text = complexNumber.description
         modulusLabel.text = complexNumber.modulusDescription
         angleLabel.text = complexNumber.degreesDescription
-        //        print("SETUP VIEW")
     }
     
     private func addSubviews() {

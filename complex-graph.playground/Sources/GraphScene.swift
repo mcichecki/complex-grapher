@@ -6,7 +6,7 @@ public final class GraphScene: SKScene {
     
     private let frameHeight: CGFloat
     
-    private let complexNumbersSet = ComplexNumbersSet()
+    private let complexNumbersList = ComplexNumbersList()
     
     private let dashedPatter: [CGFloat] = [10.0, 8.0]
     
@@ -27,6 +27,8 @@ public final class GraphScene: SKScene {
     private var activePointName: String?
     
     private var pointTouch: UITouch?
+    
+    private var throttle = 0
     
     private var sumBackgroundView: UIView = {
         let view = UIView(frame: .zero)
@@ -103,21 +105,16 @@ public final class GraphScene: SKScene {
         topStackView.translatesAutoresizingMaskIntoConstraints = false
         topStackView.axis = .vertical
         topStackView.spacing = 5.0
-        //        topStackView.distribution = UIStackView.Distribution.fillProportionally
         topStackView.alignment = UIStackView.Alignment.firstBaseline
         
         return topStackView
     }()
     
     private enum NodeName: String {
-        case xAxis
-        case yAxis
-        case sumNumber
-        case sumVectorNode
-        case arcNode
-        case arcLabel
-        case firstSumVector
-        case secondSumVector
+        case xAxis, yAxis
+        case sumNumber, sumVectorNode
+        case arcNode, arcLabel
+        case firstSumVector, secondSumVector
         case positionLabel
     }
     
@@ -149,7 +146,7 @@ public final class GraphScene: SKScene {
     //    }
     
     public func plot(complexNumber: ComplexNumber? = nil, withArc: Bool = false) {
-        guard let attributedPoint = complexNumbersSet.add() else {
+        guard let attributedPoint = complexNumbersList.add() else {
             return
         }
         
@@ -184,7 +181,7 @@ public final class GraphScene: SKScene {
         complexNumbersPositions.append(pointNode.position)
         activePointName = attributedPoint.complexNumberNodeName
         
-        switch complexNumbersSet.numberOfPoints {
+        switch complexNumbersList.numberOfPoints {
         case 1:
             plotArc(startingPoint)
             positionLabelNode.text = ""
@@ -367,7 +364,7 @@ public final class GraphScene: SKScene {
             .enumerated()
             .forEach {
                 for (index, part) in $0.element.enumerated() {
-                    let nodeColorAttributes: [NSAttributedString.Key: Any] = [.foregroundColor: complexNumbersSet.sortedSet[index].nodeColor]
+                    let nodeColorAttributes: [NSAttributedString.Key: Any] = [.foregroundColor: complexNumbersList.list[index].nodeColor]
                     let isReal = $0.offset == 0
                     if index == 0 {
                         let attributedString = NSAttributedString(string: "\(part)", attributes: nodeColorAttributes)
@@ -395,22 +392,22 @@ public final class GraphScene: SKScene {
         return transformComplexNumber(sum)
     }
     
-    private func updatePosition(_ position: CGPoint) {
-        guard let activeName = activePointName else {
-            print("no active")
-            return
-        }
-        
-        let index = complexNumbersSet.indexForPoint(activeName)
-        
+    private func updatePosition(_ position: CGPoint, force: Bool = false) {
+        guard let activeName = activePointName else { return }
+        let index = complexNumbersList.indexForPoint(activeName)
         complexNumbersPositions[index] = position
         
-        let section = complexNumbersSet.reachedMaxNumberOfElements ? 0 : 1
+        let section = complexNumbersList.reachedMaxNumberOfElements ? 0 : 1
         let indexPathToBeReloaded = IndexPath(item: index, section: section)
-        pointsCollectionView.reloadItems(at: [indexPathToBeReloaded]) // << it has to be changed!
+        
+        throttle += 1
+        if throttle % 8 == 0 || force {
+            guard index <= complexNumbersList.numberOfPoints else { return }
+            pointsCollectionView.reloadItems(at: [indexPathToBeReloaded])
+        }
         
         // update sum, do we need this if?
-        if complexNumbersSet.numberOfPoints > 1 {
+        if complexNumbersList.numberOfPoints > 1 {
             updateSumPosition()
         } else {
             childNode(withName: NodeName.sumNumber.rawValue)?.removeFromParent()
@@ -544,8 +541,12 @@ extension GraphScene {
         print("=== touches began")
         for touch in touches {
             if let node = nodes(at: touch.location(in: self)).first,
-                node.name?.contains(AttributedPoint.NodeNames.complexNumberNodeName.rawValue) ?? false {
-                activePointName = node.name
+                node.name?.contains(AttributedPoint.NodeNames.complexNumberNodeName.rawValue) ?? false,
+                let nodeName = node.name {
+                activePointName = nodeName
+                // to do: scroll to the current cell?
+                let index = complexNumbersList.indexForPoint(nodeName)
+                print("index: \(index)")
                 pointTouch = touch
             }
         }
@@ -569,7 +570,7 @@ extension GraphScene {
             newPath.addLine(to: location)
             
             // vector
-            let vecctorNode = childNode(withName: complexNumbersSet.vectorNameForPoint(activePointName) ?? "")
+            let vecctorNode = childNode(withName: complexNumbersList.vectorNameForPoint(activePointName) ?? "")
             if let vecctorNode = vecctorNode as? SKShapeNode {
                 vecctorNode.path = newPath
             }
@@ -581,37 +582,8 @@ extension GraphScene {
                 .compactMap { childNode(withName: $0) }
                 .forEach { $0.isHidden = false }
             
-            // arc
-            let complexNumber = transformPosition(movedNode.position)
-            let endAngle = CGFloat(complexNumber.thetaRadians)
-            let radius = CGFloat(complexNumber.modulus) * AxisNode.scaleOffset * 0.5
             
-            let arcPath = UIBezierPath(arcCenter: centerOfAxes, radius: radius,
-                                       startAngle: 0, endAngle: endAngle,
-                                       clockwise: true)
-            
-            let arcNode = childNode(withName: NodeName.arcNode.rawValue)
-            if let arcNode = arcNode as? SKShapeNode {
-                let arcDashedPath = arcPath.cgPath.copy(dashingWithPhase: 1.0, lengths: dashedPatter)
-                arcNode.path = arcDashedPath
-            }
-            
-            if let arcLabel = childNode(withName: NodeName.arcLabel.rawValue) as? SKLabelNode {
-                let cosAlpha = cos(endAngle)
-                let sinAlpha = sin(endAngle)
-                let xPoint = cosAlpha * radius
-                let yPoint = sinAlpha * radius
-                let labelPosition = CGPoint(x: centerOfAxes.x + xPoint, y: centerOfAxes.y + yPoint)
-                arcLabel.text = complexNumber.degreesDescription
-                arcLabel.position = labelPosition
-            }
-            
-            if let positionLabel = childNode(withName: NodeName.positionLabel.rawValue) as? SKLabelNode {
-                positionLabel.text = complexNumber.description
-                let labelPosition = CGPoint(x: movedNode.position.x + positionLabelOffset.x,
-                                            y: movedNode.position.y + positionLabelOffset.y)
-                positionLabel.position = labelPosition
-            }
+            updateLabels(with: movedNode.position)
             
             movedNode.position = location
             
@@ -625,8 +597,52 @@ extension GraphScene {
         }
         
         print("=== touches ended")
+        
         for touch in touches where touch == pointTouch {
             self.pointTouch = nil
+            
+            guard let movedNode = childNode(withName: activePointName ?? "") else {
+                return
+            }
+            
+            updateLabels(with: movedNode.position)
+            updatePosition(movedNode.position, force: true)
+        }
+    }
+    
+    private func updateLabels(with position: CGPoint) {
+        // arc
+        let complexNumber = transformPosition(position)
+        let endAngle = CGFloat(complexNumber.thetaRadians)
+        let radius = CGFloat(complexNumber.modulus) * AxisNode.scaleOffset * 0.5
+        
+        let arcPath = UIBezierPath(arcCenter: centerOfAxes, radius: radius,
+                                   startAngle: 0, endAngle: endAngle,
+                                   clockwise: true)
+        
+        let arcNode = childNode(withName: NodeName.arcNode.rawValue)
+        if let arcNode = arcNode as? SKShapeNode {
+            let arcDashedPath = arcPath.cgPath.copy(dashingWithPhase: 1.0, lengths: dashedPatter)
+            arcNode.path = arcDashedPath
+        }
+        
+        // arc label
+        if let arcLabel = childNode(withName: NodeName.arcLabel.rawValue) as? SKLabelNode {
+            let cosAlpha = cos(endAngle)
+            let sinAlpha = sin(endAngle)
+            let xPoint = cosAlpha * radius
+            let yPoint = sinAlpha * radius
+            let labelPosition = CGPoint(x: centerOfAxes.x + xPoint, y: centerOfAxes.y + yPoint)
+            arcLabel.text = complexNumber.degreesDescription
+            arcLabel.position = labelPosition
+        }
+        
+        // position label
+        if let positionLabel = childNode(withName: NodeName.positionLabel.rawValue) as? SKLabelNode {
+            positionLabel.text = complexNumber.description
+            let labelPosition = CGPoint(x: position.x + positionLabelOffset.x,
+                                        y: position.y + positionLabelOffset.y)
+            positionLabel.position = labelPosition
         }
     }
 }
@@ -635,14 +651,14 @@ extension GraphScene {
 
 extension GraphScene: UICollectionViewDataSource {
     public func numberOfSections(in collectionView: UICollectionView) -> Int {
-        return complexNumbersSet.reachedMaxNumberOfElements ? 1 : 2
+        return complexNumbersList.reachedMaxNumberOfElements ? 1 : 2
     }
     
     public func collectionView(_ collectionView: UICollectionView, numberOfItemsInSection section: Int) -> Int {
         if section == 0 {
-            return complexNumbersSet.reachedMaxNumberOfElements ? complexNumbersSet.sortedSet.count : 1
+            return complexNumbersList.reachedMaxNumberOfElements ? complexNumbersList.list.count : 1
         } else if section == 1 {
-            return complexNumbersSet.sortedSet.count
+            return complexNumbersList.list.count
         }
         
         return 0
@@ -650,7 +666,7 @@ extension GraphScene: UICollectionViewDataSource {
     
     public func collectionView(_ collectionView: UICollectionView, cellForItemAt indexPath: IndexPath) -> UICollectionViewCell {
         guard (indexPath.section != 0 ||
-            complexNumbersSet.reachedMaxNumberOfElements) else {
+            complexNumbersList.reachedMaxNumberOfElements) else {
                 let pointCellIdentifier = AddPointCollectionViewCell.reuseIdentifier
                 let dequeuedCell = collectionView.dequeueReusableCell(withReuseIdentifier: pointCellIdentifier,
                                                                       for: indexPath)
@@ -682,7 +698,7 @@ extension GraphScene: UICollectionViewDataSource {
         
         cell.tag = indexPath.item
         cell.delegate = self
-        cell.setupCell(with: transformPosition(position), color: complexNumbersSet.sortedSet[indexPath.item].nodeColor)
+        cell.setupCell(with: transformPosition(position), color: complexNumbersList.list[indexPath.item].nodeColor)
         
         return cell
     }
@@ -692,7 +708,8 @@ extension GraphScene: UICollectionViewDataSource {
 
 extension GraphScene: UICollectionViewDelegate {
     public func collectionView(_ collectionView: UICollectionView, didSelectItemAt indexPath: IndexPath) {
-        guard indexPath.section == 0,
+        guard collectionView.numberOfSections == 2,
+            indexPath.section == 0,
             indexPath.item == 0 else {
                 let position = complexNumbersPositions[indexPath.item]
                 speechSynthesizer.speak(transformPosition(position))
@@ -702,14 +719,14 @@ extension GraphScene: UICollectionViewDelegate {
         
         plot()
         
-        if complexNumbersSet.reachedMaxNumberOfElements {
+        if complexNumbersList.reachedMaxNumberOfElements {
             updateSumPosition()
             collectionView.reloadData()
             return
         }
         
         updateSumPosition()
-        let newItemIndexPath = IndexPath(item: complexNumbersSet.numberOfPoints - 1, section: 1)
+        let newItemIndexPath = IndexPath(item: complexNumbersList.numberOfPoints - 1, section: 1)
         collectionView.insertItems(at: [newItemIndexPath])
     }
 }
@@ -718,11 +735,11 @@ extension GraphScene: UICollectionViewDelegate {
 
 extension GraphScene: PointCollectionViewCellDelegate {
     func didTapRemove(_ cell: PointCollectionViewCell, item: Int) {
-        let activeIndex = complexNumbersSet.indexForPoint(activePointName ?? "")
+        let activeIndex = complexNumbersList.indexForPoint(activePointName ?? "")
         print("remove: \(item), active: \(activeIndex)")
         
         // TODO: fix
-        complexNumbersSet.remove(at: item)
+        complexNumbersList.remove(at: item)
             .forEach {
                 childNode(withName: $0)?.removeFromParent()
         }
@@ -733,17 +750,15 @@ extension GraphScene: PointCollectionViewCellDelegate {
             NodeName.positionLabel
         ]
         
-        if complexNumbersSet.numberOfPoints == 0 {
+        if complexNumbersList.numberOfPoints == 0 {
             nodes.map { $0.rawValue }
                 .compactMap { childNode(withName: $0) }
                 .forEach { $0.removeFromParent() }
         }
         
-        //        if activeIndex == item {
         nodes.map { $0.rawValue }
             .compactMap { childNode(withName: $0) }
             .forEach { $0.isHidden = true }
-        //        }
         
         complexNumbersPositions.remove(at: item)
         updateSumPosition()

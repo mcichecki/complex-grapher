@@ -33,12 +33,11 @@ final class AddPointCollectionViewCell: UICollectionViewCell {
     }
     
     private func setupConstraints() {
-        let offset: CGFloat = 5.0
         NSLayoutConstraint.activate([
-            addButton.topAnchor.constraint(equalTo: contentView.topAnchor, constant: offset),
-            addButton.leadingAnchor.constraint(equalTo: contentView.leadingAnchor, constant: offset),
-            addButton.trailingAnchor.constraint(equalTo: contentView.trailingAnchor, constant: -offset),
-            addButton.bottomAnchor.constraint(equalTo: contentView.bottomAnchor, constant: -offset)
+            addButton.centerXAnchor.constraint(equalTo: contentView.centerXAnchor),
+            addButton.centerYAnchor.constraint(equalTo: contentView.centerYAnchor),
+            addButton.heightAnchor.constraint(equalToConstant: 30.0),
+            addButton.widthAnchor.constraint(equalToConstant: 30.0)
             ])
     }
     

@@ -1,12 +1,11 @@
 import Foundation
 import UIKit.UIColor
 
-// TODO: Change name to smth different
-final class ComplexNumbersSet {
-    public private(set)var sortedSet: [AttributedPoint] = []
+final class ComplexNumbersList {
+    public private(set)var list: [AttributedPoint] = []
     
     var numberOfPoints: Int {
-        return sortedSet.count
+        return list.count
     }
     
     var reachedMaxNumberOfElements: Bool {
@@ -20,8 +19,6 @@ final class ComplexNumbersSet {
         
         return colors
     }()
-    
-    //    private var complexNumbersSet: Set<AttributedPoint> = []
     
     @discardableResult
     func add() -> AttributedPoint? {
@@ -37,53 +34,52 @@ final class ComplexNumbersSet {
         }
         let pickedColor = nodesColors.remove(at: indexToBeRemoved)
         let attributedPoint = AttributedPoint(index: index, nodeColor: pickedColor)
-        sortedSet.append(attributedPoint)
+        list.append(attributedPoint)
         
         sortSet()
         return attributedPoint
     }
     
     func remove(at index: Int) -> [String] {
-        //        print("index remove: \(index), \(sortedSet)")
-        guard !sortedSet.isEmpty,
-            index <= sortedSet.count - 1 else {
+        guard !list.isEmpty,
+            index <= list.count - 1 else {
                 return []
         }
         
-        let element = sortedSet.remove(at: index)
+        let element = list.remove(at: index)
         nodesColors.append(element.nodeColor)
         
         return [element.complexNumberNodeName, element.vectorNumberNodeName]
     }
     
     func vectorNameForPoint(_ name: String) -> String? {
-        return sortedSet.first(where: { $0.complexNumberNodeName == name })?.vectorNumberNodeName
+        return list.first(where: { $0.complexNumberNodeName == name })?.vectorNumberNodeName
     }
     
     func colorForPoint(_ name: String) -> UIColor? {
-        return sortedSet.first(where: { $0.complexNumberNodeName == name})?.nodeColor
+        return list.first(where: { $0.complexNumberNodeName == name})?.nodeColor
     }
     
     func attributedPoint(for index: Int) -> AttributedPoint? {
-        return sortedSet.first(where: { $0.complexNumberNodeName.contains("\(index)") })
+        return list.first(where: { $0.complexNumberNodeName.contains("\(index)") })
     }
     
     func indexForPoint(_ name: String) -> Int {
-        guard let attributedPoint = sortedSet.first(where: { $0.complexNumberNodeName == name }) else {
+        guard let attributedPoint = list.first(where: { $0.complexNumberNodeName == name }) else {
             return 0
         }
         
-        return sortedSet.firstIndex(of: attributedPoint) ?? 0
+        return list.firstIndex(of: attributedPoint) ?? 0
     }
     
     private func sortSet() {
-        guard sortedSet.count > 1 else {
-            if let firstComplexNumber = sortedSet.first {
-                sortedSet = [firstComplexNumber]
+        guard list.count > 1 else {
+            if let firstComplexNumber = list.first {
+                list = [firstComplexNumber]
             }
             return
         }
         
-        sortedSet = sortedSet.sorted(by: { $0.index < $1.index })
+        list = list.sorted(by: { $0.index < $1.index })
     }
 }

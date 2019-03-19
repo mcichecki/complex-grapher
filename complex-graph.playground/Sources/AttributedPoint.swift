@@ -4,7 +4,6 @@ import UIKit
 struct AttributedPoint {
     enum NodeNames: String {
         case complexNumberNodeName
-        
         case vectorNumberNodeName
     }
     

@@ -26,7 +26,6 @@ public final class AxisNode: SKShapeNode {
     
     public init(length: CGFloat, center: CGPoint, orientation: Orientation = .horizontal) {
         let halfLength = length * 0.5
-        //        print("axe center: \(center)")
         let horizontal = orientation == .horizontal
         
         let startX = center.x - (horizontal ? halfLength : 0)
