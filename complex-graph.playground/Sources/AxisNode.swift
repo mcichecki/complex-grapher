@@ -12,7 +12,13 @@ public final class AxisNode: SKShapeNode {
     
     private let endPoint: CGPoint
     
+    private let length: CGFloat
+    
     private let centerOfAxis: CGPoint
+    
+    private var xAxisScalePoints: [CGFloat] = []
+    
+    private var yAxisScalePoints: [CGFloat] = []
     
     private var isXAxis: Bool {
         return startPoint.y == endPoint.y
@@ -25,6 +31,7 @@ public final class AxisNode: SKShapeNode {
     }
     
     public init(length: CGFloat, center: CGPoint, orientation: Orientation = .horizontal) {
+        self.length = length
         let halfLength = length * 0.5
         let horizontal = orientation == .horizontal
         
@@ -42,6 +49,7 @@ public final class AxisNode: SKShapeNode {
         drawLine()
         drawArrow()
         drawScale()
+        drawScaleLines()
     }
     
     required init?(coder aDecoder: NSCoder) {
@@ -54,7 +62,7 @@ public final class AxisNode: SKShapeNode {
         linePath.addLine(to: endPoint)
         
         path = linePath
-        strokeColor = .white //.green
+        strokeColor = .white
     }
     
     private func drawArrow() {
@@ -96,10 +104,8 @@ public final class AxisNode: SKShapeNode {
             endPoint.x :
             endPoint.y
         let numberOfScales = Int(length / scaleOffset * 0.5) - 1
-        
         if isXAxis {
             var tmpYOffset = centerOfAxis.x
-            // y axis from center to right
             for i in 0...numberOfScales {
                 let scalePath = CGMutablePath()
                 let movePoint = tmpYOffset
@@ -115,6 +121,8 @@ public final class AxisNode: SKShapeNode {
                     continue
                 }
                 
+                xAxisScalePoints.append(movePoint)
+                
                 // label
                 let numberLabelNode = SKLabelNode(text: String(i))
                 numberLabelNode.fontSize = LabelProperties.fontSize
@@ -125,7 +133,6 @@ public final class AxisNode: SKShapeNode {
             }
             
             tmpYOffset = centerOfAxis.x - scaleOffset
-            // y axis from center to left
             for i in 0...(numberOfScales - 1) {
                 let scalePath = CGMutablePath()
                 scalePath.move(to: CGPoint(x: tmpYOffset, y: centerOfAxis.y + offsetSize))
@@ -133,6 +140,7 @@ public final class AxisNode: SKShapeNode {
                 
                 let scaleNode = SKShapeNode(path: scalePath)
                 addChild(scaleNode)
+                xAxisScalePoints.append(tmpYOffset)
                 
                 // label
                 let numberLabelNode = SKLabelNode(text: String(-(1 + i)))
@@ -165,6 +173,9 @@ public final class AxisNode: SKShapeNode {
                 continue
             }
             
+            yAxisScalePoints.append(tmpXOffset)
+            
+            
             let numberLabelNode = SKLabelNode(text: String(i))
             numberLabelNode.fontSize = LabelProperties.fontSize
             numberLabelNode.fontName = LabelProperties.fontName
@@ -176,7 +187,6 @@ public final class AxisNode: SKShapeNode {
         }
         
         tmpXOffset = centerOfAxis.y - scaleOffset
-        // x axis from center to bottom
         for i in 0...(numberOfScales - 1) {
             let scalePath = CGMutablePath()
             scalePath.move(to: CGPoint(x: centerOfAxis.x - offsetSize, y: tmpXOffset))
@@ -184,6 +194,7 @@ public final class AxisNode: SKShapeNode {
             
             let scaleNode = SKShapeNode(path: scalePath)
             addChild(scaleNode)
+            yAxisScalePoints.append(tmpXOffset)
             
             // label
             let numberLabelNode = SKLabelNode(text: String(-(1+i)))
@@ -197,5 +208,44 @@ public final class AxisNode: SKShapeNode {
         }
         
         return
+    }
+    
+    private func drawScaleLines() {
+        let halfLength = length * 0.5
+        
+        let xAxisScaleNodes = xAxisScalePoints
+            .map { (start: CGPoint(x: $0, y: centerOfAxis.y - halfLength),
+                    end: CGPoint(x: $0, y: centerOfAxis.y + halfLength))
+            }
+            .map { (point: (start: CGPoint, end: CGPoint)) -> CGMutablePath in
+                let linePath = CGMutablePath()
+                linePath.move(to: point.start)
+                linePath.addLine(to: point.end)
+                
+                return linePath
+        }
+        
+        let yAxisScaleNodes = yAxisScalePoints
+            .map { (start: CGPoint(x: centerOfAxis.x - halfLength, y: $0),
+                    end: CGPoint(x: centerOfAxis.x + halfLength, y: $0))
+            }
+            .map { (point: (start: CGPoint, end: CGPoint)) -> CGMutablePath in
+                let linePath = CGMutablePath()
+                linePath.move(to: point.start)
+                linePath.addLine(to: point.end)
+                
+                return linePath
+        }
+        
+        (xAxisScaleNodes + yAxisScaleNodes)
+            .map { path -> SKShapeNode in
+                let lineNode = SKShapeNode(path: path.copy(dashingWithPhase: 10.0, lengths: [5.0, 10.0]))
+                lineNode.strokeColor = .white
+                lineNode.alpha = 0.1
+                
+                return lineNode
+            }
+            .forEach(addChild(_:))
+        
     }
 }

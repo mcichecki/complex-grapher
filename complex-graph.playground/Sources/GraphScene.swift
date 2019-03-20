@@ -5,11 +5,6 @@ public final class GraphScene: SKScene {
     private let frameWidth: CGFloat
     private let frameHeight: CGFloat
     private let complexNumbersList = ComplexNumbersList()
-    private let dashedPatter: [CGFloat] = [10.0, 8.0]
-    private let lengthOfAxis: CGFloat = 700.0
-    private let offset = CGPoint(x: 0.0, y: -100.0)
-    private let positionLabelOffset = CGPoint(x: 0.0, y: 15.0)
-    private let sumVectorView = SumVectorView(frame: .zero)
     private var complexNumbersPositions: [CGPoint] = []
     private var activePointName: String?
     private var pointTouch: UITouch?
@@ -17,7 +12,7 @@ public final class GraphScene: SKScene {
     private lazy var speechSynthesizer = SpeechSynthesizer()
     
     private lazy var centerOfAxes: CGPoint = {
-        return CGPoint(x: centerPoint.x + offset.x, y: centerPoint.y + offset.y)
+        return centerPoint + Constant.offset
     }()
     
     private lazy var centerPoint: CGPoint = {
@@ -32,6 +27,8 @@ public final class GraphScene: SKScene {
         
         return arcLabelNode
     }()
+    
+    private let sumVectorView = SumVectorView(frame: .zero)
     
     private lazy var positionLabelNode: SKLabelNode = {
         let positionLabelNode = SKLabelNode(fontNamed: "SFCompactText-Regular")
@@ -75,6 +72,13 @@ public final class GraphScene: SKScene {
         case positionLabel
     }
     
+    private enum Constant {
+        static let lengthOfAxis: CGFloat = 700.0
+        static let offset = CGPoint(x: 0.0, y: -100.0)
+        static let positionLabelOffset = CGPoint(x: 0.0, y: 15.0)
+        static let dashedPattern: [CGFloat] = [10.0, 8.0]
+    }
+    
     public override init(size: CGSize) {
         self.frameWidth = size.width
         self.frameHeight = size.height
@@ -105,9 +109,9 @@ public final class GraphScene: SKScene {
     public func plot(complexNumber: ComplexNumber? = nil, withArc: Bool = false) {
         guard let attributedPoint = complexNumbersList.add() else { return }
         
-        let yAbsoluteOffset = abs(offset.y)
+        let yAbsoluteOffset = abs(Constant.offset.y)
         let startingXPoint = CGFloat.random(in: frameWidth * 0.2...frameWidth * 0.8)
-        let startingYPoint = CGFloat.random(in: yAbsoluteOffset * 1.2...(yAbsoluteOffset + lengthOfAxis) * 0.8)
+        let startingYPoint = CGFloat.random(in: yAbsoluteOffset * 1.2...(yAbsoluteOffset + Constant.lengthOfAxis) * 0.8)
         let randomPoint = CGPoint(x: startingXPoint, y: startingYPoint)
         
         var startingPoint = randomPoint
@@ -153,7 +157,7 @@ public final class GraphScene: SKScene {
         
         let arcPath = UIBezierPath(arcCenter: centerOfAxes, radius: radius,
                                    startAngle: 0, endAngle: endAngle, clockwise: true)
-        let arcDashedPath = arcPath.cgPath.copy(dashingWithPhase: 1.0, lengths: dashedPatter)
+        let arcDashedPath = arcPath.cgPath.copy(dashingWithPhase: 1.0, lengths: Constant.dashedPattern)
         let arcNode = SKShapeNode(path: arcDashedPath)
         arcNode.alpha = 0.5
         arcNode.name = NodeName.arcNode.rawValue
@@ -185,16 +189,25 @@ public final class GraphScene: SKScene {
     }
     
     private func setupScene() {
+        setupBackgroundView()
         setupAxes()
         setupCollectionView()
         setupSumComplexNumberView()
     }
     
+    private func setupBackgroundView() {
+        let backgroundView = UIView(frame: .zero)
+        backgroundView.frame = CGRect(x: 0, y: 0, width: frameWidth, height: frameHeight - frameWidth - 75.0)
+        backgroundView.backgroundColor = .darkGray // TODO: make it blurry?
+        
+        view?.addSubview(backgroundView)
+    }
+    
     private func setupAxes() {
-        let xAxisNode = AxisNode(length: lengthOfAxis, center: centerOfAxes)
+        let xAxisNode = AxisNode(length: Constant.lengthOfAxis, center: centerOfAxes)
         xAxisNode.name = NodeName.xAxis.rawValue
         
-        let yAxisNode = AxisNode(length: lengthOfAxis, center: centerOfAxes, orientation: .vertical)
+        let yAxisNode = AxisNode(length: Constant.lengthOfAxis, center: centerOfAxes, orientation: .vertical)
         yAxisNode.name = NodeName.yAxis.rawValue
         
         [xAxisNode, yAxisNode].forEach(addChild(_:))
@@ -289,7 +302,7 @@ public final class GraphScene: SKScene {
                     let sumVectorPath = CGMutablePath()
                     sumVectorPath.move(to: complexNumberPosition)
                     sumVectorPath.addLine(to: sumPosition)
-                    let dashedPath = sumVectorPath.copy(dashingWithPhase: 10.0, lengths: dashedPatter)
+                    let dashedPath = sumVectorPath.copy(dashingWithPhase: 10.0, lengths: Constant.dashedPattern)
                     let sumVectorNode = SKShapeNode(path: dashedPath)
                     switch index {
                     case 0:
@@ -311,7 +324,7 @@ public final class GraphScene: SKScene {
                     sumVectorPath.move(to: complexNumbersPositions.elementExists(at: index) ? complexNumbersPositions[index] : .zero)
                     sumVectorPath.addLine(to: sumPosition)
                     
-                    let dashedPath = sumVectorPath.copy(dashingWithPhase: 10.0, lengths: dashedPatter)
+                    let dashedPath = sumVectorPath.copy(dashingWithPhase: 10.0, lengths: Constant.dashedPattern)
                     firstSumVector.alpha = 0.5
                     firstSumVector.path = dashedPath
                 }
@@ -323,7 +336,7 @@ public final class GraphScene: SKScene {
                     sumVectorPath.move(to: complexNumbersPositions.elementExists(at: index) ? complexNumbersPositions[index] : .zero)
                     sumVectorPath.addLine(to: sumPosition)
                     
-                    let dashedPath = sumVectorPath.copy(dashingWithPhase: 10.0, lengths: dashedPatter)
+                    let dashedPath = sumVectorPath.copy(dashingWithPhase: 10.0, lengths: Constant.dashedPattern)
                     secondSumVector.alpha = 0.5
                     secondSumVector.path = dashedPath
                 }
@@ -350,8 +363,8 @@ public final class GraphScene: SKScene {
     }
     
     private func transformPosition(_ position: CGPoint) -> ComplexNumber {
-        let transformedPosition = CGPoint(x: position.x + offset.x * 0.5 - lengthOfAxis * 0.5,
-                                          y: position.y + offset.y * 0.5 - lengthOfAxis * 0.5)
+        let transformedPosition = CGPoint(x: position.x + Constant.offset.x * 0.5 - Constant.lengthOfAxis * 0.5,
+                                          y: position.y + Constant.offset.y * 0.5 - Constant.lengthOfAxis * 0.5)
         let divisor = AxisNode.scaleOffset
         let zPosition = CGPoint(x: transformedPosition.x / divisor,
                                 y: transformedPosition.y / divisor)
@@ -462,7 +475,7 @@ extension GraphScene {
         
         let arcNode = childNode(withName: NodeName.arcNode.rawValue)
         if let arcNode = arcNode as? SKShapeNode {
-            let arcDashedPath = arcPath.cgPath.copy(dashingWithPhase: 1.0, lengths: dashedPatter)
+            let arcDashedPath = arcPath.cgPath.copy(dashingWithPhase: 1.0, lengths: Constant.dashedPattern)
             arcNode.path = arcDashedPath
         }
         
@@ -476,8 +489,8 @@ extension GraphScene {
         // position label
         if let positionLabel = childNode(withName: NodeName.positionLabel.rawValue) as? SKLabelNode {
             positionLabel.text = complexNumber.description
-            let labelPosition = CGPoint(x: position.x + positionLabelOffset.x,
-                                        y: position.y + positionLabelOffset.y)
+            let labelPosition = CGPoint(x: position.x + Constant.positionLabelOffset.x,
+                                        y: position.y + Constant.positionLabelOffset.y)
             positionLabel.position = labelPosition
         }
     }
