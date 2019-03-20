@@ -12,10 +12,10 @@ final class SpeechSynthesizer: NSObject {
         synthesizer.delegate = self
     }
     
-    func speak(_ complexNumber: ComplexNumber) {
+    func speak(_ complexNumber: ComplexNumber, isSum: Bool = false) {
         guard !isSpeaking else { return }
         
-        let complexNumberDescription = complexNumber.synthesizerDescription
+        let complexNumberDescription = (isSum ? "sum of complex numbers: " : "") +  complexNumber.synthesizerDescription
         print("complexNumber: \(complexNumberDescription)")
         let speechUtterance = AVSpeechUtterance(string: complexNumberDescription.lowercased())
         speechUtterance.rate = 0.65

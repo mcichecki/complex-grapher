@@ -42,7 +42,7 @@ final class AddPointCollectionViewCell: UICollectionViewCell {
     }
     
     private func setupStyling() {
-        contentView.layer.cornerRadius = 5.0
+        contentView.layer.cornerRadius = 10.0
         contentView.backgroundColor = .white
     }
 }

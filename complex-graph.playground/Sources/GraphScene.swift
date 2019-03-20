@@ -120,7 +120,7 @@ public final class GraphScene: SKScene {
             startingPoint = transformComplexNumber(complexNumber)
         }
         
-        let pointNode = PointNode(radius: 10.0, position: startingPoint)
+        let pointNode = PointNode(radius: 7.0, position: startingPoint)
         pointNode.name = attributedPoint.complexNumberNodeName
         pointNode.zPosition = 5.0
         pointNode.fillColor = attributedPoint.nodeColor
@@ -173,10 +173,11 @@ public final class GraphScene: SKScene {
     private func plotSum(_ complexNumber: ComplexNumber) {
         let startingPoint = transformComplexNumber(complexNumber)
         
-        let pointNode = PointNode(radius: 10.0, position: startingPoint)
+        let pointNode = PointNode(radius: 8.0, position: startingPoint)
         pointNode.name = NodeName.sumNumber.rawValue
         pointNode.zPosition = 5.0
         pointNode.fillColor = .white
+        pointNode.strokeColor = .darkGray
         
         let vectorPath = CGMutablePath()
         vectorPath.move(to: centerOfAxes)
@@ -198,7 +199,7 @@ public final class GraphScene: SKScene {
     private func setupBackgroundView() {
         let backgroundView = UIView(frame: .zero)
         backgroundView.frame = CGRect(x: 0, y: 0, width: frameWidth, height: frameHeight - frameWidth - 75.0)
-        backgroundView.backgroundColor = .darkGray // TODO: make it blurry?
+        backgroundView.backgroundColor = backgroundColor.darker(by: 5.0)
         
         view?.addSubview(backgroundView)
     }

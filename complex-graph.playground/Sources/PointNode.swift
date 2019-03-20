@@ -2,6 +2,11 @@ import Foundation
 import SpriteKit
 
 public final class PointNode: SKShapeNode {
+    public override var fillColor: UIColor {
+        didSet {
+            strokeColor = fillColor.darker(by: 17.0)
+        }
+    }
     override public init() {
         super.init()
         setupPoint()

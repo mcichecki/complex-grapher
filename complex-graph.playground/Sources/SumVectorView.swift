@@ -1,19 +1,16 @@
 import UIKit
 
 final class SumVectorView: UIView {
-    var sumComplexNumberView: ComplexNumberView = {
-        let sumComplexNumberView = ComplexNumberView(frame: .zero, isDarkModeEnabled: true)
-        return sumComplexNumberView
-    }()
+    private let sumComplexNumberView = ComplexNumberView(frame: .zero, isDarkModeEnabled: true)
     
-    let realLabel: UILabel = {
+    private let realLabel: UILabel = {
         let realLabel = UILabel(frame: .zero)
         realLabel.textColor = .white
         realLabel.font = realLabel.font.withSize(15.0)
         return realLabel
     }()
     
-    let imaginaryLabel: UILabel = {
+    private let imaginaryLabel: UILabel = {
         let imaginaryLabel = UILabel(frame: .zero)
         imaginaryLabel.textColor = .white
         imaginaryLabel.font = imaginaryLabel.font.withSize(15.0)
@@ -21,7 +18,7 @@ final class SumVectorView: UIView {
         return imaginaryLabel
     }()
     
-    let labelsStackView: UIStackView = {
+    private let labelsStackView: UIStackView = {
         let labelsStackView = UIStackView(frame: .zero)
         labelsStackView.axis = .vertical
         labelsStackView.spacing = 5.0
@@ -29,13 +26,18 @@ final class SumVectorView: UIView {
         return labelsStackView
     }()
     
+    private var sum = ComplexNumber()
+    
     public override init(frame: CGRect) {
         super.init(frame: frame)
         
         addSubviews()
         setupConstraints()
         setupStyling()
+        setupGestureRecognizer()
     }
+    
+    private let speechSynthesizer = SpeechSynthesizer()
     
     required init?(coder aDecoder: NSCoder) {
         fatalError("init(coder:) has not been implemented")
@@ -43,6 +45,7 @@ final class SumVectorView: UIView {
     
     public func configure(with complexNumbers: [ComplexNumber], colors: [UIColor]) {
         let sum = complexNumbers.sum
+        self.sum = sum
         let realParts = complexNumbers.realParts
         let imaginaryParts = complexNumbers.imaginaryParts
         
@@ -119,5 +122,15 @@ final class SumVectorView: UIView {
     private func setupStyling() {
         layer.cornerRadius = 5.0
         backgroundColor = .white
+    }
+    
+    private func setupGestureRecognizer() {
+        let tapGestureRecognizer = UITapGestureRecognizer(target: self, action: #selector(tapped))
+        
+        self.addGestureRecognizer(tapGestureRecognizer)
+    }
+    
+    @objc private func tapped() {
+        speechSynthesizer.speak(sum, isSum: true)
     }
 }
