@@ -2,6 +2,7 @@ import Foundation
 import SpriteKit
 
 public final class GraphScene: SKScene {
+    private(set) static var angleOption = AngleOption.degrees
     private let frameWidth: CGFloat
     private let frameHeight: CGFloat
     private let complexNumbersList = ComplexNumbersList()
@@ -17,6 +18,21 @@ public final class GraphScene: SKScene {
     
     private lazy var centerPoint: CGPoint = {
         return CGPoint(x: frameWidth * 0.5, y: frameHeight * 0.5)
+    }()
+    
+    private lazy var sumLabel: UILabel = {
+        let sumLabel = UILabel(frame: .zero)
+        sumLabel.text = "Sum: "
+        sumLabel.font = UIFont.systemFont(ofSize: 14.0)
+        sumLabel.textColor = .white
+        
+        return sumLabel
+    }()
+    
+    private lazy var angleControlView: AngleControlView = {
+        let angleControlView = AngleControlView(frame: .zero)
+        angleControlView.translatesAutoresizingMaskIntoConstraints = false
+        return angleControlView
     }()
     
     private lazy var arcLabelNode: SKLabelNode = {
@@ -164,7 +180,7 @@ public final class GraphScene: SKScene {
         
         // arc label
         let labelPosition = centerOfAxes + endAngle.offset(radius: radius)
-        arcLabelNode.text = complexNumber.degreesDescription
+        arcLabelNode.text = complexNumber.degreesDescription(GraphScene.angleOption)
         arcLabelNode.position = labelPosition
         
         [arcNode, arcLabelNode].forEach(addChild(_:))
@@ -241,12 +257,17 @@ public final class GraphScene: SKScene {
     }
     
     private func setupSumComplexNumberView() {
-        sumVectorView.translatesAutoresizingMaskIntoConstraints = false
-        topStackView.addArrangedSubview(sumVectorView)
+        topStackView.addArrangedSubview(angleControlView)
+        angleControlView.delegate = self
         
         guard let view = view else { return }
+        
+        sumVectorView.translatesAutoresizingMaskIntoConstraints = false
+        [sumLabel, sumVectorView].forEach { topStackView.addArrangedSubview($0) }
+        
         NSLayoutConstraint.activate([sumVectorView.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 10.0)])
-        sumVectorView.isHidden = complexNumbersList.numberOfPoints < 2
+        NSLayoutConstraint.activate([sumLabel.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 10.0)])
+        [sumVectorView, sumLabel].forEach { $0.isHidden = complexNumbersList.numberOfPoints < 2 }
     }
     
     @discardableResult
@@ -293,7 +314,7 @@ public final class GraphScene: SKScene {
             vectorNode.path = newPath
         }
         
-        sumVectorView.isHidden = complexNumbersList.numberOfPoints < 2
+        [sumVectorView, sumLabel].forEach { $0.isHidden = complexNumbersList.numberOfPoints < 2 }
         
         let numberOfComplexNumbers = complexNumbersPositions.count
         switch numberOfComplexNumbers {
@@ -483,7 +504,7 @@ extension GraphScene {
         // arc label
         if let arcLabel = childNode(withName: NodeName.arcLabel.rawValue) as? SKLabelNode {
             let labelPosition = centerOfAxes + endAngle.offset(radius: radius)
-            arcLabel.text = complexNumber.degreesDescription
+            arcLabel.text = complexNumber.degreesDescription(GraphScene.angleOption)
             arcLabel.position = labelPosition
         }
         
@@ -600,5 +621,19 @@ extension GraphScene: PointCollectionViewCellDelegate {
         complexNumbersPositions.remove(at: item)
         updateSumPosition()
         pointsCollectionView.reloadData()
+    }
+}
+
+extension GraphScene: AngleControlViewDelegate {
+    func didSelect(option: AngleOption) {
+        GraphScene.angleOption = option
+        
+        pointsCollectionView.reloadData()
+        updateSumPosition()
+        guard let activeName = activePointName,
+            let node = childNode(withName: activeName) else { return }
+        
+        arcLabelNode.text = transformPosition(node.position)
+            .degreesDescription(GraphScene.angleOption)
     }
 }

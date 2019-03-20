@@ -100,6 +100,14 @@ extension ComplexNumber: CustomStringConvertible {
         return "φ = \(thetaDegrees.rounded(3))°"
     }
     
+    public var radiansDescription: String {
+        return "φ = \(thetaRadians.rounded(3)) rad"
+    }
+    
+    public var piRadiansDescription: String {
+        return "φ = \(thetaRadiansPi.rounded(3))π rad"
+    }
+    
     public var synthesizerDescription: String {
         var synthDescription = description
             .replacingOccurrences(of: ".", with: " point ")
@@ -109,5 +117,13 @@ extension ComplexNumber: CustomStringConvertible {
         synthDescription.append("\n--angle: \(String(thetaDegrees.rounded(2)).replacingOccurrences(of: ".", with: " point ")) degrees")
         //        print(synthDescription)
         return synthDescription
+    }
+    
+    func degreesDescription(_ option: AngleOption) -> String {
+        switch option {
+        case .degrees: return degreesDescription
+        case .pi: return piRadiansDescription
+        case .radians: return radiansDescription
+        }
     }
 }

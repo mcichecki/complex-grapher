@@ -9,6 +9,8 @@ extension UIColor {
     
     static let lightBlue = UIColor.rgb(129, 162, 215)
     
+    static let confirmationGreen = UIColor.rgb(106, 176, 76)
+    
     static let nodesColors: [UIColor] = [
         .rgb(235, 77, 75), // red
         .rgb(240, 195, 48), // yellow
