@@ -75,7 +75,6 @@ public final class GraphScene: SKScene {
         topStackView.translatesAutoresizingMaskIntoConstraints = false
         topStackView.axis = .vertical
         topStackView.spacing = 5.0
-        topStackView.alignment = UIStackView.Alignment.firstBaseline
         
         return topStackView
     }()
@@ -257,17 +256,26 @@ public final class GraphScene: SKScene {
     }
     
     private func setupSumComplexNumberView() {
-        topStackView.addArrangedSubview(angleControlView)
+        let bottomBackgroundView = UIView(frame: .zero)
+        bottomBackgroundView.translatesAutoresizingMaskIntoConstraints = false
+        [sumLabel].forEach { topStackView.addArrangedSubview($0) }
+        
+        topStackView.addArrangedSubview(bottomBackgroundView)
+        [sumVectorView, angleControlView].forEach { bottomBackgroundView.addSubview($0) }
         angleControlView.delegate = self
         
         guard let view = view else { return }
         
         sumVectorView.translatesAutoresizingMaskIntoConstraints = false
-        [sumLabel, sumVectorView].forEach { topStackView.addArrangedSubview($0) }
         
-        NSLayoutConstraint.activate([sumVectorView.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 10.0)])
-        NSLayoutConstraint.activate([sumLabel.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 10.0)])
-        [sumVectorView, sumLabel].forEach { $0.isHidden = complexNumbersList.numberOfPoints < 2 }
+        [[bottomBackgroundView.heightAnchor.constraint(equalToConstant: 80.0)],
+         [sumVectorView.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 10.0)],
+         [sumLabel.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 10.0)],
+         [angleControlView.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -10.0),
+          angleControlView.heightAnchor.constraint(equalTo: sumVectorView.heightAnchor)]]
+            .forEach { NSLayoutConstraint.activate($0) }
+        sumVectorView.isHidden = complexNumbersList.numberOfPoints < 2
+        sumLabel.text = complexNumbersList.numberOfPoints < 2 ? " " : "Sum: "
     }
     
     @discardableResult
@@ -314,7 +322,8 @@ public final class GraphScene: SKScene {
             vectorNode.path = newPath
         }
         
-        [sumVectorView, sumLabel].forEach { $0.isHidden = complexNumbersList.numberOfPoints < 2 }
+        sumVectorView.isHidden = complexNumbersList.numberOfPoints < 2
+        sumLabel.text = complexNumbersList.numberOfPoints < 2 ? " " : "Sum: "
         
         let numberOfComplexNumbers = complexNumbersPositions.count
         switch numberOfComplexNumbers {

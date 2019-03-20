@@ -9,9 +9,9 @@ enum AngleOption: Int, CaseIterable {
     
     var name: String {
         switch self {
-        case .degrees: return "Degrees"
-        case .pi: return "Pi"
-        case .radians: return "Radians"
+        case .degrees: return "°"
+        case .pi: return "π rad"
+        case .radians: return "rad"
         }
     }
 }
@@ -24,6 +24,7 @@ final class AngleControlView: UIView {
         mainStackView.axis = .vertical
         mainStackView.spacing = 5.0
         mainStackView.translatesAutoresizingMaskIntoConstraints = false
+        mainStackView.distribution = .fillEqually
         
         return mainStackView
     }()
@@ -36,6 +37,10 @@ final class AngleControlView: UIView {
         addSubviews()
         setupConstraints()
         setupStyling()
+        mainStackView.subviews
+            .compactMap { $0 as? UIButton }
+            .filter { (AngleOption(rawValue: $0.tag) ?? AngleOption.pi) == AngleOption.degrees }
+            .forEach { $0.backgroundColor = .confirmationGreen }
     }
     
     private var selected: AngleOption = .degrees
@@ -58,6 +63,8 @@ final class AngleControlView: UIView {
                 button.titleLabel?.font = UIFont.systemFont(ofSize: 14.0)
                 button.addTarget(self, action: #selector(onTap(sender:)), for: .touchUpInside)
                 button.tag = $0.rawValue
+                
+                //                NSLayoutConstraint.activate([button.heightAnchor.constraint(equalToConstant: 16.0)])
                 
                 return button
             }
