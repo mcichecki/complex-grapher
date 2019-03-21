@@ -12,6 +12,15 @@ final class SpeechSynthesizer: NSObject {
         synthesizer.delegate = self
     }
     
+    func speak(text: String) {
+        guard !isSpeaking else { return }
+        
+        let speechUtterance = AVSpeechUtterance(string: text.lowercased())
+        speechUtterance.rate = 0.55
+        speechUtterance.pitchMultiplier = 1.0
+        synthesizer.speak(speechUtterance)
+    }
+    
     func speak(_ complexNumber: ComplexNumber, isSum: Bool = false) {
         guard !isSpeaking else { return }
         

@@ -11,6 +11,8 @@ extension UIColor {
     
     static let confirmationGreen = UIColor.rgb(106, 176, 76)
     
+    static let warningRed = UIColor.rgb(255, 45, 85)
+    
     static let nodesColors: [UIColor] = [
         .rgb(235, 77, 75), // red
         .rgb(240, 195, 48), // yellow

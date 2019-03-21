@@ -96,6 +96,7 @@ extension ComplexNumber: CustomStringConvertible {
         return "|z| = \(modulus.rounded(3))"
     }
     
+    // TODO: is it really theta or fi?
     public var degreesDescription: String {
         return "φ = \(thetaDegrees.rounded(3))°"
     }

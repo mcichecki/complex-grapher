@@ -79,10 +79,7 @@ public final class GraphScene: SKScene {
         return topStackView
     }()
     
-    private let referenceView: ReferenceView = {
-        let referenceView = ReferenceView(frame: .zero)
-        return referenceView
-    }()
+    private let referenceView = ReferenceView(frame: .zero)
     
     private enum NodeName: String {
         case xAxis, yAxis
@@ -303,7 +300,12 @@ public final class GraphScene: SKScene {
     @objc private func onReferenceButtonTap() {
         referenceView.frame = CGRect(x: 0, y: 0, width: frameWidth, height: frameHeight)
         referenceView.delegate = self
+        referenceView.alpha = 0.0
         view?.addSubview(referenceView)
+        
+        UIView.animate(withDuration: 0.3) {
+            self.referenceView.alpha = 1.0
+        }
     }
     
     @discardableResult
@@ -677,6 +679,10 @@ extension GraphScene: AngleControlViewDelegate {
 
 extension GraphScene: ReferenceViewDelegate {
     func didClose() {
-        referenceView.removeFromSuperview()
+        UIView.animate(withDuration: 0.5, animations: {
+            self.referenceView.alpha = 0.0
+        }, completion: { _ in
+            self.referenceView.removeFromSuperview()
+        })
     }
 }
