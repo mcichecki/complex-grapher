@@ -79,6 +79,11 @@ public final class GraphScene: SKScene {
         return topStackView
     }()
     
+    private let referenceView: ReferenceView = {
+        let referenceView = ReferenceView(frame: .zero)
+        return referenceView
+    }()
+    
     private enum NodeName: String {
         case xAxis, yAxis
         case sumNumber, sumVectorNode
@@ -268,6 +273,16 @@ public final class GraphScene: SKScene {
         
         sumVectorView.translatesAutoresizingMaskIntoConstraints = false
         
+        // TODO: move angle switcher to left, and sum to right
+        
+        /*
+         [[bottomBackgroundView.heightAnchor.constraint(equalToConstant: 80.0)],
+         [sumVectorView.leadingAnchor.constraint(equalTo: angleControlView.trailingAnchor, constant: 10.0)],
+         [sumLabel.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 150.0)],
+         [angleControlView.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 10.0),
+         angleControlView.heightAnchor.constraint(equalTo: sumVectorView.heightAnchor)]]
+         
+         */
         [[bottomBackgroundView.heightAnchor.constraint(equalToConstant: 80.0)],
          [sumVectorView.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 10.0)],
          [sumLabel.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 10.0)],
@@ -276,6 +291,19 @@ public final class GraphScene: SKScene {
             .forEach { NSLayoutConstraint.activate($0) }
         sumVectorView.isHidden = complexNumbersList.numberOfPoints < 2
         sumLabel.text = complexNumbersList.numberOfPoints < 2 ? " " : "Sum: "
+        
+        let referenceButton = UIButton(frame: .zero)
+        referenceButton.setTitle("REFERENCE", for: .normal)
+        
+        referenceButton.addTarget(self, action: #selector(onReferenceButtonTap), for: .touchUpInside)
+        
+        topStackView.addArrangedSubview(referenceButton)
+    }
+    
+    @objc private func onReferenceButtonTap() {
+        referenceView.frame = CGRect(x: 0, y: 0, width: frameWidth, height: frameHeight)
+        referenceView.delegate = self
+        view?.addSubview(referenceView)
     }
     
     @discardableResult
@@ -644,5 +672,11 @@ extension GraphScene: AngleControlViewDelegate {
         
         arcLabelNode.text = transformPosition(node.position)
             .degreesDescription(GraphScene.angleOption)
+    }
+}
+
+extension GraphScene: ReferenceViewDelegate {
+    func didClose() {
+        referenceView.removeFromSuperview()
     }
 }
