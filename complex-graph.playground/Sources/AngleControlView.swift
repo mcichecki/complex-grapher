@@ -29,8 +29,6 @@ final class AngleControlView: UIView {
         return mainStackView
     }()
     
-    //    private let speechSynthesizer = SpeechSynthesizer()
-    
     public override init(frame: CGRect) {
         super.init(frame: frame)
         
@@ -60,11 +58,10 @@ final class AngleControlView: UIView {
                 button.setTitle($0.name, for: .normal)
                 button.setTitleColor(.white, for: .normal)
                 button.backgroundColor = .mainGray
+                button.setTitleColor(UIColor.white.withAlphaComponent(0.5), for: .highlighted)
                 button.titleLabel?.font = UIFont.systemFont(ofSize: 14.0)
                 button.addTarget(self, action: #selector(onTap(sender:)), for: .touchUpInside)
                 button.tag = $0.rawValue
-                
-                //                NSLayoutConstraint.activate([button.heightAnchor.constraint(equalToConstant: 16.0)])
                 
                 return button
             }

@@ -81,15 +81,15 @@ extension ComplexNumber: CustomStringConvertible {
     }
     
     public var descriptionWithDegrees: String {
-        return description + ", |z| = \(modulus.rounded(3)), φ = \(thetaDegrees.rounded(3))°"
+        return description + ", |z| = \(modulus.rounded(3)), θ = \(thetaDegrees.rounded(3))°"
     }
     
     public var descriptionWithRadiansPi: String {
-        return description + ", |z| = \(modulus.rounded(3)), φ = \(thetaRadiansPi.rounded(3))π rad"
+        return description + ", |z| = \(modulus.rounded(3)), θ = \(thetaRadiansPi.rounded(3))π rad"
     }
     
     public var descriptionWithRadians: String {
-        return description + ", |z| = \(modulus.rounded(3)), φ = \(thetaRadians.rounded(3)) rad"
+        return description + ", |z| = \(modulus.rounded(3)), θ = \(thetaRadians.rounded(3)) rad"
     }
     
     public var modulusDescription: String {
@@ -98,15 +98,15 @@ extension ComplexNumber: CustomStringConvertible {
     
     // TODO: is it really theta or fi?
     public var degreesDescription: String {
-        return "φ = \(thetaDegrees.rounded(3))°"
+        return "θ = \(thetaDegrees.rounded(3))°"
     }
     
     public var radiansDescription: String {
-        return "φ = \(thetaRadians.rounded(3)) rad"
+        return "θ = \(thetaRadians.rounded(3)) rad"
     }
     
     public var piRadiansDescription: String {
-        return "φ = \(thetaRadiansPi.rounded(3))π rad"
+        return "θ = \(thetaRadiansPi.rounded(3))π rad"
     }
     
     public var synthesizerDescription: String {

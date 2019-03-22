@@ -11,14 +11,12 @@ public final class GraphScene: SKScene {
     private var pointTouch: UITouch?
     private var throttle = 0
     private lazy var speechSynthesizer = SpeechSynthesizer()
+    private let sumVectorView = SumVectorView(frame: .zero)
+    private let referenceView = ReferenceView(frame: .zero)
     
-    private lazy var centerOfAxes: CGPoint = {
-        return centerPoint + Constant.offset
-    }()
+    private lazy var centerOfAxes: CGPoint = { return centerPoint + Constant.offset }()
     
-    private lazy var centerPoint: CGPoint = {
-        return CGPoint(x: frameWidth * 0.5, y: frameHeight * 0.5)
-    }()
+    private lazy var centerPoint: CGPoint = { return CGPoint(x: frameWidth * 0.5, y: frameHeight * 0.5) }()
     
     private lazy var sumLabel: UILabel = {
         let sumLabel = UILabel(frame: .zero)
@@ -43,8 +41,6 @@ public final class GraphScene: SKScene {
         
         return arcLabelNode
     }()
-    
-    private let sumVectorView = SumVectorView(frame: .zero)
     
     private lazy var positionLabelNode: SKLabelNode = {
         let positionLabelNode = SKLabelNode(fontNamed: "SFCompactText-Regular")
@@ -79,8 +75,6 @@ public final class GraphScene: SKScene {
         return topStackView
     }()
     
-    private let referenceView = ReferenceView(frame: .zero)
-    
     private enum NodeName: String {
         case xAxis, yAxis
         case sumNumber, sumVectorNode
@@ -91,7 +85,7 @@ public final class GraphScene: SKScene {
     
     private enum Constant {
         static let lengthOfAxis: CGFloat = 700.0
-        static let offset = CGPoint(x: 0.0, y: -100.0)
+        static let offset = CGPoint(x: 0.0, y: -125.0)
         static let positionLabelOffset = CGPoint(x: 0.0, y: 15.0)
         static let dashedPattern: [CGFloat] = [10.0, 8.0]
     }
@@ -103,9 +97,7 @@ public final class GraphScene: SKScene {
         super.init(size: size)
     }
     
-    required init?(coder aDecoder: NSCoder) {
-        fatalError("init(coder:) has not been implemented")
-    }
+    required init?(coder aDecoder: NSCoder) { fatalError("init(coder:) has not been implemented") }
     
     public override func didMove(to view: SKView) {
         super.didMove(to: view)
@@ -215,7 +207,7 @@ public final class GraphScene: SKScene {
     
     private func setupBackgroundView() {
         let backgroundView = UIView(frame: .zero)
-        backgroundView.frame = CGRect(x: 0, y: 0, width: frameWidth, height: frameHeight - frameWidth - 75.0)
+        backgroundView.frame = CGRect(x: 0, y: 0, width: frameWidth, height: frameHeight - frameWidth - 25.0)
         backgroundView.backgroundColor = backgroundColor.darker(by: 5.0)
         
         view?.addSubview(backgroundView)
@@ -285,18 +277,17 @@ public final class GraphScene: SKScene {
         sumVectorView.isHidden = complexNumbersList.numberOfPoints < 2
         sumLabel.text = complexNumbersList.numberOfPoints < 2 ? " " : "Sum: "
         
-        
         let referenceButtonBackgroundView = UIView()
-        referenceButtonBackgroundView.translatesAutoresizingMaskIntoConstraints = false
         let referenceButton = UIButton(frame: .zero)
         referenceButton.setTitle("Glossary", for: .normal)
         referenceButtonBackgroundView.addSubview(referenceButton)
-        referenceButton.backgroundColor = .mainGray
+        referenceButton.setTitleColor(UIColor.white.withAlphaComponent(0.5), for: .highlighted)
         referenceButton.titleLabel?.font = UIFont.boldSystemFont(ofSize: 14.0)
+        referenceButton.backgroundColor = .mainGray
         referenceButton.layer.borderWidth = 2.0
         referenceButton.layer.borderColor = UIColor.mainGray.darker(by: 10.0).cgColor
         referenceButton.layer.cornerRadius = 5.0
-        referenceButton.translatesAutoresizingMaskIntoConstraints = false
+        [referenceButtonBackgroundView, referenceButton].forEach { $0.translatesAutoresizingMaskIntoConstraints = false }
         [[referenceButton.widthAnchor.constraint(equalToConstant: 130.0),
           referenceButton.leadingAnchor.constraint(equalTo: referenceButtonBackgroundView.leadingAnchor, constant: 10.0),
           referenceButton.heightAnchor.constraint(equalTo: referenceButtonBackgroundView.heightAnchor, multiplier: 0.8),
@@ -435,34 +426,20 @@ public final class GraphScene: SKScene {
     }
     
     private func transformPosition(_ position: CGPoint) -> ComplexNumber {
-        let transformedPosition = CGPoint(x: position.x + Constant.offset.x * 0.5 - Constant.lengthOfAxis * 0.5,
-                                          y: position.y + Constant.offset.y * 0.5 - Constant.lengthOfAxis * 0.5)
+        let transformedPosition = position - centerOfAxes
         let divisor = AxisNode.scaleOffset
-        let zPosition = CGPoint(x: transformedPosition.x / divisor,
-                                y: transformedPosition.y / divisor)
+        let zPosition = CGPoint(x: transformedPosition.x / divisor, y: transformedPosition.y / divisor)
         
-        // TODO: REMOVE
-        //        print("og position: \(position)")
-        //        print("transformed position: \(transformedPosition)")
-        //        print("z position: \(zPosition)")
-        
-        let complexNumber = ComplexNumber(re: Double(zPosition.x).rounded(2),
-                                          im: Double(zPosition.y).rounded(2))
+        let complexNumber = ComplexNumber(re: Double(zPosition.x).rounded(2), im: Double(zPosition.y).rounded(2))
         
         return complexNumber
     }
     
     private func transformComplexNumber(_ complexNumber: ComplexNumber) -> CGPoint {
         let multiplier = Double(AxisNode.scaleOffset)
-        let multipledPosition = CGPoint(x: (complexNumber.realPart ?? 0.0) * multiplier,
-                                        y: (complexNumber.imaginaryPart ?? 0.0) * multiplier)
-        let graphPosition = CGPoint(x: multipledPosition.x + centerOfAxes.x,
-                                    y: multipledPosition.y + centerOfAxes.y)
-        
-        // TODO: REMOVE
-        //        print("complexNumber: x: \(complexNumber.realPart) + y: \(complexNumber.imaginaryPart)")
-        //        print("mult position: \(multipledPosition)")
-        //        print("graph position: \(graphPosition)")
+        let multipliedPosition = CGPoint(x: (complexNumber.realPart ?? 0.0) * multiplier,
+                                         y: (complexNumber.imaginaryPart ?? 0.0) * multiplier)
+        let graphPosition = multipliedPosition + centerOfAxes
         
         return graphPosition
     }

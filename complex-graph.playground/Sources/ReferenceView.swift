@@ -29,7 +29,7 @@ public enum Symbol: String, CaseIterable {
         case .realPart: return "real part, e.g. real part of the equation 2 + 3 times i-is equal 2"
         case .imaginaryPart: return "imaginary part, e.g. imaginary part of the equation 2 + 3 times i-is equal 3"
         case .i: return "imaginary number - solution of the equation x²-1,- i² = -1,- i = square root of -1"
-        case .modulusZ: return "modulus of z - distance between the origin (point zero zero) and point z.- modulus of z is equal to the sum of real and imaginary parts to the power of two"
+        case .modulusZ: return "modulus of z - distance between the origin (point zero zero) and point z.- modulus of z is equal to the square root of a sum of an real part to the two and an imaginary part to the two"
         case .argumentZ: return "argument of z or theta - angle between the positive real axis and the line joining the point to the origin"
         }
     }
