@@ -74,7 +74,7 @@ public final class GraphScene: SKScene {
         let topStackView = UIStackView(frame: .zero)
         topStackView.translatesAutoresizingMaskIntoConstraints = false
         topStackView.axis = .vertical
-        topStackView.spacing = 5.0
+        topStackView.spacing = 2.0
         
         return topStackView
     }()
@@ -242,7 +242,7 @@ public final class GraphScene: SKScene {
         pointsCollectionView.delegate = self
         
         let pointsCollectionViewConstraints = [
-            pointsCollectionView.heightAnchor.constraint(equalToConstant: 100.0),
+            pointsCollectionView.heightAnchor.constraint(equalToConstant: 90.0),
             pointsCollectionView.widthAnchor.constraint(equalToConstant: frameWidth)
         ]
         
@@ -259,8 +259,10 @@ public final class GraphScene: SKScene {
     
     private func setupSumComplexNumberView() {
         let bottomBackgroundView = UIView(frame: .zero)
-        bottomBackgroundView.translatesAutoresizingMaskIntoConstraints = false
-        [sumLabel].forEach { topStackView.addArrangedSubview($0) }
+        let sumLabelBackgroundView = UIView()
+        [sumLabelBackgroundView].forEach { topStackView.addArrangedSubview($0) }
+        sumLabelBackgroundView.addSubview(sumLabel)
+        [bottomBackgroundView, sumLabelBackgroundView, sumLabel, sumVectorView].forEach { $0.translatesAutoresizingMaskIntoConstraints = false }
         
         topStackView.addArrangedSubview(bottomBackgroundView)
         [sumVectorView, angleControlView].forEach { bottomBackgroundView.addSubview($0) }
@@ -268,33 +270,42 @@ public final class GraphScene: SKScene {
         
         guard let view = view else { return }
         
-        sumVectorView.translatesAutoresizingMaskIntoConstraints = false
-        
-        // TODO: move angle switcher to left, and sum to right
-        
-        /*
-         [[bottomBackgroundView.heightAnchor.constraint(equalToConstant: 80.0)],
+        [[sumLabelBackgroundView.leadingAnchor.constraint(equalTo: topStackView.leadingAnchor),
+          sumLabelBackgroundView.trailingAnchor.constraint(equalTo: topStackView.trailingAnchor),
+          sumLabelBackgroundView.heightAnchor.constraint(equalToConstant: 18.0)],
+         [bottomBackgroundView.heightAnchor.constraint(equalToConstant: 80.0)],
          [sumVectorView.leadingAnchor.constraint(equalTo: angleControlView.trailingAnchor, constant: 10.0)],
-         [sumLabel.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 150.0)],
+         [sumLabel.leadingAnchor.constraint(equalTo: sumLabelBackgroundView.leadingAnchor, constant: 120.0),
+          sumLabel.heightAnchor.constraint(equalToConstant: 16.0),
+          sumLabel.trailingAnchor.constraint(equalTo: sumLabelBackgroundView.trailingAnchor)],
          [angleControlView.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 10.0),
-         angleControlView.heightAnchor.constraint(equalTo: sumVectorView.heightAnchor)]]
-         
-         */
-        [[bottomBackgroundView.heightAnchor.constraint(equalToConstant: 80.0)],
-         [sumVectorView.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 10.0)],
-         [sumLabel.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 10.0)],
-         [angleControlView.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -10.0),
           angleControlView.heightAnchor.constraint(equalTo: sumVectorView.heightAnchor)]]
             .forEach { NSLayoutConstraint.activate($0) }
+        
         sumVectorView.isHidden = complexNumbersList.numberOfPoints < 2
         sumLabel.text = complexNumbersList.numberOfPoints < 2 ? " " : "Sum: "
         
-        let referenceButton = UIButton(frame: .zero)
-        referenceButton.setTitle("REFERENCE", for: .normal)
         
+        let referenceButtonBackgroundView = UIView()
+        referenceButtonBackgroundView.translatesAutoresizingMaskIntoConstraints = false
+        let referenceButton = UIButton(frame: .zero)
+        referenceButton.setTitle("Glossary", for: .normal)
+        referenceButtonBackgroundView.addSubview(referenceButton)
+        referenceButton.backgroundColor = .mainGray
+        referenceButton.titleLabel?.font = UIFont.boldSystemFont(ofSize: 14.0)
+        referenceButton.layer.borderWidth = 2.0
+        referenceButton.layer.borderColor = UIColor.mainGray.darker(by: 10.0).cgColor
+        referenceButton.layer.cornerRadius = 5.0
+        referenceButton.translatesAutoresizingMaskIntoConstraints = false
+        [[referenceButton.widthAnchor.constraint(equalToConstant: 130.0),
+          referenceButton.leadingAnchor.constraint(equalTo: referenceButtonBackgroundView.leadingAnchor, constant: 10.0),
+          referenceButton.heightAnchor.constraint(equalTo: referenceButtonBackgroundView.heightAnchor, multiplier: 0.8),
+          referenceButton.bottomAnchor.constraint(equalTo: referenceButtonBackgroundView.bottomAnchor)],
+         [referenceButtonBackgroundView.heightAnchor.constraint(equalToConstant: 30.0)]
+            ].forEach { NSLayoutConstraint.activate($0) }
         referenceButton.addTarget(self, action: #selector(onReferenceButtonTap), for: .touchUpInside)
         
-        topStackView.addArrangedSubview(referenceButton)
+        topStackView.addArrangedSubview(referenceButtonBackgroundView)
     }
     
     @objc private func onReferenceButtonTap() {

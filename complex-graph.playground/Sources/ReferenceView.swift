@@ -157,6 +157,17 @@ public class ReferenceView: UIView {
         return closeButton
     }()
     
+    private let titleLabel: UILabel = {
+        let titleLabel = UILabel(frame: .zero)
+        titleLabel.translatesAutoresizingMaskIntoConstraints = false
+        titleLabel.text = "Glossary"
+        titleLabel.font = UIFont.boldSystemFont(ofSize: 60.0)
+        titleLabel.textColor = .white
+        titleLabel.textAlignment = .center
+        
+        return titleLabel
+    }()
+    
     private let mainStackView: UIStackView = {
         let mainStackView = UIStackView(frame: .zero)
         mainStackView.translatesAutoresizingMaskIntoConstraints = false
@@ -184,7 +195,7 @@ public class ReferenceView: UIView {
     private func addSubviews() {
         addSubview(blurEffectView)
         
-        [closeButton, mainStackView].forEach { blurEffectView.contentView.addSubview($0) }
+        [closeButton, mainStackView, titleLabel].forEach { blurEffectView.contentView.addSubview($0) }
     }
     
     private func setupConstraints() {
@@ -205,7 +216,12 @@ public class ReferenceView: UIView {
             mainStackView.heightAnchor.constraint(equalTo: blurEffectView.heightAnchor, multiplier: 0.35)
         ]
         
-        [blurEffectViewConstraints, stackViewConstraints, closeButtonConstraints]
+        let titleLabelConstraints = [
+            titleLabel.centerXAnchor.constraint(equalTo: blurEffectView.centerXAnchor),
+            titleLabel.bottomAnchor.constraint(equalTo: mainStackView.topAnchor, constant: -100.0)
+        ]
+        
+        [blurEffectViewConstraints, stackViewConstraints, closeButtonConstraints, titleLabelConstraints]
             .forEach { NSLayoutConstraint.activate($0) }
     }
     
