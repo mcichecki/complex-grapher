@@ -6,7 +6,7 @@
  
  ##### About playground
  
- This playground lets you discover world of complex numbers and visualize addition??? of these numbers.
+ This playground lets you discover and visualize a world of complex numbers.
  
  Complex numbers are represented by different colors and all details about numbers can be found in the top view.
  

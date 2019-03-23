@@ -11,9 +11,10 @@ public final class GraphScene: SKScene {
     private var activePointName: String?
     private var pointTouch: UITouch?
     private var throttle = 0
-    private lazy var speechSynthesizer = SpeechSynthesizer()
+    private var detailsEnabled = true
     private let sumVectorView = SumVectorView(frame: .zero)
     private let referenceView = ReferenceView(frame: .zero)
+    private lazy var speechSynthesizer = SpeechSynthesizer()
     private lazy var centerOfAxes: CGPoint = { return centerPoint + Constant.offset }()
     private lazy var centerPoint: CGPoint = { return CGPoint(x: frameWidth * 0.5, y: frameHeight * 0.5) }()
     
@@ -165,7 +166,7 @@ public final class GraphScene: SKScene {
                                    startAngle: 0, endAngle: endAngle, clockwise: true)
         let arcDashedPath = arcPath.cgPath.copy(dashingWithPhase: 1.0, lengths: Constant.dashedPattern)
         let arcNode = SKShapeNode(path: arcDashedPath)
-        arcNode.alpha = 0.5
+        arcNode.alpha = 0.4
         arcNode.name = NodeName.arcNode.rawValue
         
         // arc label
@@ -274,26 +275,11 @@ public final class GraphScene: SKScene {
         sumVectorView.isHidden = complexNumbersList.numberOfPoints < 2
         sumLabel.text = complexNumbersList.numberOfPoints < 2 ? " " : "Sum: "
         
-        let referenceButtonBackgroundView = UIView()
-        let referenceButton = UIButton(frame: .zero)
-        referenceButton.setTitle("Glossary", for: .normal)
-        referenceButtonBackgroundView.addSubview(referenceButton)
-        referenceButton.setTitleColor(UIColor.white.withAlphaComponent(0.5), for: .highlighted)
-        referenceButton.titleLabel?.font = UIFont.boldSystemFont(ofSize: 14.0)
-        referenceButton.backgroundColor = .mainGray
-        referenceButton.layer.borderWidth = 2.0
-        referenceButton.layer.borderColor = UIColor.mainGray.darker(by: 10.0).cgColor
-        referenceButton.layer.cornerRadius = 5.0
-        [referenceButtonBackgroundView, referenceButton].forEach { $0.translatesAutoresizingMaskIntoConstraints = false }
-        [[referenceButton.widthAnchor.constraint(equalToConstant: 130.0),
-          referenceButton.leadingAnchor.constraint(equalTo: referenceButtonBackgroundView.leadingAnchor, constant: 10.0),
-          referenceButton.heightAnchor.constraint(equalTo: referenceButtonBackgroundView.heightAnchor, multiplier: 0.8),
-          referenceButton.bottomAnchor.constraint(equalTo: referenceButtonBackgroundView.bottomAnchor)],
-         [referenceButtonBackgroundView.heightAnchor.constraint(equalToConstant: 30.0)]
-            ].forEach { NSLayoutConstraint.activate($0) }
-        referenceButton.addTarget(self, action: #selector(onReferenceButtonTap), for: .touchUpInside)
-        
-        topStackView.addArrangedSubview(referenceButtonBackgroundView)
+        let bottomView = BottomView()
+        bottomView.translatesAutoresizingMaskIntoConstraints = false
+        bottomView.glossaryButton.addTarget(self, action: #selector(onGlossaryButtonTap), for: .touchUpInside)
+        bottomView.detailsButton.addTarget(self, action: #selector(onDetailsButtonTap), for: .touchUpInside)
+        topStackView.addArrangedSubview(bottomView)
     }
     
     @objc private func onReferenceButtonTap() {
@@ -440,6 +426,27 @@ public final class GraphScene: SKScene {
         
         return graphPosition
     }
+    
+    @objc private func onGlossaryButtonTap() {
+        referenceView.frame = CGRect(x: 0, y: 0, width: frameWidth, height: frameHeight)
+        referenceView.delegate = self
+        referenceView.alpha = 0.0
+        view?.addSubview(referenceView)
+        
+        UIView.animate(withDuration: 0.3) {
+            self.referenceView.alpha = 1.0
+        }
+    }
+    
+    @objc private func onDetailsButtonTap(sender: UIButton) {
+        detailsEnabled.toggle()
+        sender.backgroundColor = detailsEnabled ? .confirmationGreen : .warningRed
+        let nodes: [NodeName] = [.arcNode, .arcLabel, .firstSumVector, .secondSumVector, .positionLabel]
+        nodes.map { $0.rawValue }
+            .compactMap { childNode(withName: $0) }
+            .forEach { $0.isHidden = !detailsEnabled }
+        
+    }
 }
 
 // MARK: Touch handling
@@ -480,7 +487,7 @@ extension GraphScene {
              NodeName.positionLabel]
                 .map { $0.rawValue }
                 .compactMap { childNode(withName: $0) }
-                .forEach { $0.isHidden = false }
+                .forEach { $0.isHidden = !detailsEnabled }
             
             updateLabels(with: movedNode.position)
             

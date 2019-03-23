@@ -241,7 +241,7 @@ public final class AxisNode: SKShapeNode {
             .map { path -> SKShapeNode in
                 let lineNode = SKShapeNode(path: path.copy(dashingWithPhase: 10.0, lengths: [5.0, 10.0]))
                 lineNode.strokeColor = .white
-                lineNode.alpha = 0.1
+                lineNode.alpha = 0.15
                 
                 return lineNode
             }
