@@ -114,8 +114,19 @@ extension ComplexNumber: CustomStringConvertible {
             .replacingOccurrences(of: ".", with: " point ")
             .replacingOccurrences(of: "-", with: " minus ")
             .replacingOccurrences(of: "+", with: " plus ")
-        synthDescription.append("\n--modulus: \(String(modulus.rounded(2)).replacingOccurrences(of: ".", with: " point "))")
-        synthDescription.append("\n--angle: \(String(thetaDegrees.rounded(2)).replacingOccurrences(of: ".", with: " point ")) degrees")
+        synthDescription.append("\n--modulus: \(String(modulus.rounded(3)).replacingOccurrences(of: ".", with: " point "))")
+        synthDescription.append("\n--angle: ")
+        var angleDescription = ""
+        switch GraphScene.angleOption {
+        case .degrees:
+            angleDescription.append(String(thetaDegrees.rounded(3)).replacingOccurrences(of: ".", with: "point") + "degrees")
+        case .pi:
+            angleDescription.append(String(thetaRadiansPi.rounded(3)).replacingOccurrences(of: ".", with: "point") + "pi radians")
+        case .radians:
+            angleDescription.append(String(thetaRadians.rounded(3)).replacingOccurrences(of: ".", with: "point") + "radians")
+            
+        }
+        synthDescription.append(angleDescription)
         return synthDescription
     }
     
