@@ -148,9 +148,9 @@ public final class GraphScene: SKScene {
             addChild(positionLabelNode)
         case 2:
             plotComplexNumbersSumIfNeeded(true)
-            updateSumPosition()
+            fallthrough
         default:
-            return
+            updateSumPosition()
         }
     }
     
