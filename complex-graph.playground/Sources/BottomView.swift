@@ -5,15 +5,42 @@ final class BottomView: UIView {
     let glossaryButton: UIButton = {
         let glossaryButton = UIButton(frame: .zero)
         glossaryButton.setTitle("Glossary", for: .normal)
-        
+        glossaryButton.setTitleColor(UIColor.white.withAlphaComponent(0.5), for: .highlighted)
+        glossaryButton.titleLabel?.font = UIFont.boldSystemFont(ofSize: 14.0)
+        glossaryButton.backgroundColor = .mainGray
+        glossaryButton.layer.borderWidth = 2.0
+        glossaryButton.layer.borderColor = UIColor.mainGray.darker(by: 10.0).cgColor
+        glossaryButton.layer.cornerRadius = 5.0
         return glossaryButton
     }()
     
-    let detailsButton: UIButton = {
-        let detailsButton = UIButton(frame: .zero)
-        detailsButton.setTitle("Details", for: .normal)
+    let detailsSwitch: UISwitch = {
+        let detailsSwitch = UISwitch(frame: .zero)
+        detailsSwitch.onTintColor = .confirmationGreen
+        detailsSwitch.tintColor = .warningRed
+        detailsSwitch.backgroundColor = .warningRed
         
-        return detailsButton
+        return detailsSwitch
+    }()
+    
+    let detailsView: UIView = {
+        let detailsView = UIView(frame: .zero)
+        detailsView.backgroundColor = .mainGray
+        detailsView.layer.borderWidth = 2.0
+        detailsView.layer.borderColor = UIColor.mainGray.darker(by: 10.0).cgColor
+        detailsView.layer.cornerRadius = 5.0
+        
+        return detailsView
+    }()
+    
+    private let detailsLabel: UILabel = {
+        let detailsLabel = UILabel()
+        detailsLabel.text = "Additional information"
+        detailsLabel.font = UIFont.boldSystemFont(ofSize: 14.0)
+        detailsLabel.textColor = .white
+        detailsLabel.textAlignment = .center
+        
+        return detailsLabel
     }()
     
     private let buttonStyle: (UIButton) -> Void = { button in
@@ -40,11 +67,13 @@ final class BottomView: UIView {
     }
     
     private func addSubviews() {
-        [glossaryButton, detailsButton].forEach { addSubview($0) }
+        [glossaryButton, detailsView].forEach { addSubview($0) }
+        
+        [detailsSwitch, detailsLabel].forEach { detailsView.addSubview($0) }
     }
     
     private func setupConstraints() {
-        [glossaryButton, detailsButton].forEach { $0.translatesAutoresizingMaskIntoConstraints = false }
+        [glossaryButton, detailsView, detailsSwitch, detailsLabel].forEach { $0.translatesAutoresizingMaskIntoConstraints = false }
         
         let glossaryButtonConstraints = [
             glossaryButton.leadingAnchor.constraint(equalTo: self.leadingAnchor, constant: 10.0),
@@ -55,29 +84,35 @@ final class BottomView: UIView {
             glossaryButton.widthAnchor.constraint(equalToConstant: 120.0)
         ]
         
-        let detailsButtonConstraints: [NSLayoutConstraint] = [
-            detailsButton.leadingAnchor.constraint(equalTo: glossaryButton.trailingAnchor, constant: 20.0),
-            detailsButton.centerYAnchor.constraint(equalTo: glossaryButton.centerYAnchor),
-            detailsButton.heightAnchor.constraint(equalTo: glossaryButton.heightAnchor),
-            detailsButton.trailingAnchor.constraint(equalTo: self.trailingAnchor, constant: -10.0),
-            detailsButton.widthAnchor.constraint(equalTo: glossaryButton.widthAnchor)
+        let detailsViewConstraints = [
+            detailsView.leadingAnchor.constraint(equalTo: glossaryButton.trailingAnchor, constant: 20.0),
+            detailsView.centerYAnchor.constraint(equalTo: glossaryButton.centerYAnchor),
+            detailsView.heightAnchor.constraint(equalTo: glossaryButton.heightAnchor),
+            detailsView.trailingAnchor.constraint(equalTo: self.trailingAnchor, constant: -10.0),
+            detailsView.widthAnchor.constraint(equalTo: glossaryButton.widthAnchor)
         ]
         
-        [glossaryButtonConstraints, detailsButtonConstraints]
+        let detailsLabelConstraints = [
+            detailsLabel.leadingAnchor.constraint(equalTo: detailsView.leadingAnchor, constant: 10.0),
+            detailsLabel.widthAnchor.constraint(equalTo: detailsView.widthAnchor, multiplier: 0.6),
+            detailsLabel.centerYAnchor.constraint(equalTo: detailsView.centerYAnchor)
+        ]
+        
+        let detailsSwitchConstraints = [
+            detailsSwitch.widthAnchor.constraint(equalToConstant: 50.0),
+            detailsSwitch.centerYAnchor.constraint(equalTo: detailsLabel.centerYAnchor),
+            detailsSwitch.trailingAnchor.constraint(equalTo: detailsView.trailingAnchor, constant: -10.0)
+            
+        ]
+        
+        [glossaryButtonConstraints, detailsViewConstraints, detailsLabelConstraints, detailsSwitchConstraints]
             .forEach { NSLayoutConstraint.activate($0) }
     }
     
     private func setupStyling() {
-        [glossaryButton, detailsButton].forEach { $0.apply(buttonStyle) }
-        detailsButton.backgroundColor = .confirmationGreen
-    }
-}
+        detailsSwitch.transform = CGAffineTransform(scaleX: 0.6, y: 0.6)
+        detailsSwitch.isOn = true
+        detailsSwitch.layer.cornerRadius = 16.0
 
-private extension UIButton {
-    @discardableResult
-    func apply(_ style: (UIButton) -> Void) -> UIButton {
-        style(self)
-        
-        return self
     }
 }

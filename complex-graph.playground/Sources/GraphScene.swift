@@ -11,12 +11,13 @@ public final class GraphScene: SKScene {
     private var activePointName: String?
     private var pointTouch: UITouch?
     private var throttle = 0
-    private var detailsEnabled = true
     private let sumVectorView = SumVectorView(frame: .zero)
     private let referenceView = ReferenceView(frame: .zero)
     private lazy var speechSynthesizer = SpeechSynthesizer()
     private lazy var centerOfAxes: CGPoint = { return centerPoint + Constant.offset }()
     private lazy var centerPoint: CGPoint = { return CGPoint(x: frameWidth * 0.5, y: frameHeight * 0.5) }()
+    
+    private let bottomView = BottomView()
     
     private lazy var sumLabel: UILabel = {
         let sumLabel = UILabel(frame: .zero)
@@ -276,10 +277,9 @@ public final class GraphScene: SKScene {
         sumVectorView.isHidden = complexNumbersList.numberOfPoints < 2
         sumLabel.text = complexNumbersList.numberOfPoints < 2 ? " " : "Sum: "
         
-        let bottomView = BottomView()
         bottomView.translatesAutoresizingMaskIntoConstraints = false
         bottomView.glossaryButton.addTarget(self, action: #selector(onGlossaryButtonTap), for: .touchUpInside)
-        bottomView.detailsButton.addTarget(self, action: #selector(onDetailsButtonTap), for: .touchUpInside)
+        bottomView.detailsSwitch.addTarget(self, action: #selector(onDetailsSwitchChange(sender:)), for: .valueChanged)
         topStackView.addArrangedSubview(bottomView)
     }
     
@@ -434,14 +434,11 @@ public final class GraphScene: SKScene {
         }
     }
     
-    @objc private func onDetailsButtonTap(sender: UIButton) {
-        detailsEnabled.toggle()
-        sender.backgroundColor = detailsEnabled ? .confirmationGreen : .warningRed
+    @objc private func onDetailsSwitchChange(sender: UISwitch) {
         let nodes: [NodeName] = [.arcNode, .arcLabel, .firstSumVector, .secondSumVector, .positionLabel]
         nodes.map { $0.rawValue }
             .compactMap { childNode(withName: $0) }
-            .forEach { $0.isHidden = !detailsEnabled }
-        
+            .forEach { $0.isHidden = !sender.isOn }
     }
 }
 
@@ -482,7 +479,7 @@ extension GraphScene {
              NodeName.positionLabel]
                 .map { $0.rawValue }
                 .compactMap { childNode(withName: $0) }
-                .forEach { $0.isHidden = !detailsEnabled }
+                .forEach { $0.isHidden = !bottomView.detailsSwitch.isOn }
             
             updateLabels(with: movedNode.position)
             
