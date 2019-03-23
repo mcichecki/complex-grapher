@@ -2,11 +2,11 @@
  
  # Complex Numbers Grapher 🧮
  
- ###### Welcome to my 2019 WWDC Scholarship submission! 🖐
+ ###### Welcome to my *2019 WWDC Scholarship* submission! 🖐
  
  ##### About playground
  
- This playground lets you discover and visualize a world of complex numbers.
+ This playground lets you discover and visualize a world of **_complex numbers_**.
  
  Complex numbers are represented by different colors and all details about numbers can be found in the top view.
  
@@ -16,18 +16,16 @@
  
  ### Some theory 👨‍🏫
  
- A complex number is a number that can be written as **a + bi** where **i** is a solution of the equation  **x² - 1** *(there is no solution to this equation in the "real world")*.
+ A complex number is a number that can be written as **_a + bi_** where **_i_** is a solution of the equation  **_x² - 1_** *(there is no solution to this equation in the "real world")*.
  
- **a** is called real part and **b** is called imaginary part so given **z = 3 + 2i**, **Re(z) = 3** and **Im(z) = 2**.
+ **a** is called real part and **_b_** is called imaginary part so given **_z = 3 + 2i_**, **_Re(z) = 3_** and **_Im(z) = 2_**.
  
- The complex numbers can be represented in a similar way as vectors using **complex plane** (also called Argand diagram) with **real axis (vertical)** and **imaginary axis (horizontal axis)**.
+ Complex numbers can be represented in a similar way as vectors using **_complex plane_** (also called **_Argand diagram_**) with **_real axis (vertical)_** and **_imaginary axis (horizontal axis)_**.
  
- The distance between the origin of the axes and point z is called modulus of z and is written as **|z| = √(a² + b²)**.
- 
- The angle between the vector corresponding to z and the positive x axis is called **arg(z)** or **θ** (theta from the Greek alphabet). It can be computed using this equation: **θ = tan⁻¹(Im(z)/Re(z))**.
+ Distance between the origin of the axes and point z is called **_modulus of z_** (**_|z|_**) and angle between the vector coreesponding to the z and the positive x axis is called **_argument of z_** (**_arg(z)_** or **_θ_**)
  
  ##### Glossary
- There is a small glossary available within the playground where you can see definitions of the most popular complex numbers symbols.
+ There is a small glossary available within the playground where you can see definitions of the most popular complex numbers symbols. Click on the definition to hear it. 🔈
  */
 
 import PlaygroundSupport
