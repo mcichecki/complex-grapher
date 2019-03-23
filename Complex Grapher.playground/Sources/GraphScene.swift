@@ -207,7 +207,7 @@ public final class GraphScene: SKScene {
     
     private func setupBackgroundView() {
         let backgroundView = UIView(frame: .zero)
-        backgroundView.frame = CGRect(x: 0, y: 0, width: frameWidth, height: frameHeight - frameWidth - 25.0)
+        backgroundView.frame = CGRect(x: 0, y: 0, width: frameWidth, height: frameHeight - frameWidth - 20.0)
         backgroundView.backgroundColor = backgroundColor.darker(by: 5.0)
         
         view?.addSubview(backgroundView)
