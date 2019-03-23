@@ -116,7 +116,6 @@ extension ComplexNumber: CustomStringConvertible {
             .replacingOccurrences(of: "+", with: " plus ")
         synthDescription.append("\n--modulus: \(String(modulus.rounded(2)).replacingOccurrences(of: ".", with: " point "))")
         synthDescription.append("\n--angle: \(String(thetaDegrees.rounded(2)).replacingOccurrences(of: ".", with: " point ")) degrees")
-        //        print(synthDescription)
         return synthDescription
     }
     

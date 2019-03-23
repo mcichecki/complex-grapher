@@ -240,6 +240,7 @@ public class ReferenceView: UIView {
     }
     
     @objc private func onCloseButtonTap() {
+        speechSynthesizer.stop()
         delegate?.didClose()
     }
 }

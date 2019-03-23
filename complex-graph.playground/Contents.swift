@@ -26,36 +26,31 @@
  
  The angle between the vector corresponding to z and the positive x axis is called **arg(z)** or **θ** (theta from the Greek alphabet). It can be computed using this equation: **θ = tan⁻¹(Im(z)/Re(z))**.
  
- ##### Reference
- * **i** - imaginary number, solution of the equation **x² - 1**, **i² = -1**, **i = √-1**
- 
- * z -
+ ##### Glossary
+ There is a small glossary available within the playground where you can see definitions of the most popular complex numbers symbols.
  */
 
 import PlaygroundSupport
 import SpriteKit
-
-/* LINKS
- https://www.hackmath.net/en/calculator/complex-number
- http://www.dchopkins.com/Kaul-cmplx-var.pdf
+/*:
+ You can set initial complex numbers programatically by adding them to the **_complexNumbers_** array or add them in the playground:
  */
-
-var title = "Complex Grapher\n"
-print(title)
-
-let sceneSize = CGSize(width: 700.0, height: 950.0)
-let viewRect = CGRect(origin: CGPoint(x: 0, y: 0), size: sceneSize)
-
-let graphScene = GraphScene(size: sceneSize)
-
-let complexNumbers = [
-    ComplexNumber(re: 2.0, im: 1.0),
-    //    ComplexNumber(re: -3.5, im: 4.5)
+let complexNumbers: [ComplexNumber] = [
+    ComplexNumber(re: 5.0, im: 2.5),
+    ComplexNumber(re: -3.0, im: 2.0)
 ]
+/*:
+ Scene setup:
+ */
+let graphScene = GraphScene()
+complexNumbers
+    .forEach { graphScene.plot(complexNumber: $0) }
 
-complexNumbers.forEach { graphScene.plot(complexNumber: $0) }
-
+let viewRect = CGRect(origin: .zero,
+                      size: graphScene.sceneSize)
 let view = SKView(frame: viewRect)
+
 view.presentScene(graphScene)
+
 PlaygroundPage.current.liveView = view
 PlaygroundPage.current.needsIndefiniteExecution = true

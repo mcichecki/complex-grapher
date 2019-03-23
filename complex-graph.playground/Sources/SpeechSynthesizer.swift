@@ -25,7 +25,6 @@ final class SpeechSynthesizer: NSObject {
         guard !isSpeaking else { return }
         
         let complexNumberDescription = (isSum ? "sum of complex numbers: " : "") +  complexNumber.synthesizerDescription
-        print("complexNumber: \(complexNumberDescription)")
         let speechUtterance = AVSpeechUtterance(string: complexNumberDescription.lowercased())
         speechUtterance.rate = 0.65
         speechUtterance.pitchMultiplier = 1.0
@@ -39,12 +38,10 @@ final class SpeechSynthesizer: NSObject {
 
 extension SpeechSynthesizer: AVSpeechSynthesizerDelegate {
     func speechSynthesizer(_ synthesizer: AVSpeechSynthesizer, didStart utterance: AVSpeechUtterance) {
-        print("didStart")
         isSpeaking.toggle()
     }
     
     func speechSynthesizer(_ synthesizer: AVSpeechSynthesizer, didFinish utterance: AVSpeechUtterance) {
-        print("didFinish")
         isSpeaking.toggle()
     }
 }

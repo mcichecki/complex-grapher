@@ -2,6 +2,7 @@ import Foundation
 import SpriteKit
 
 public final class GraphScene: SKScene {
+    public let sceneSize = CGSize(width: 700.0, height: 950.0)
     private(set) static var angleOption = AngleOption.degrees
     private let frameWidth: CGFloat
     private let frameHeight: CGFloat
@@ -13,9 +14,7 @@ public final class GraphScene: SKScene {
     private lazy var speechSynthesizer = SpeechSynthesizer()
     private let sumVectorView = SumVectorView(frame: .zero)
     private let referenceView = ReferenceView(frame: .zero)
-    
     private lazy var centerOfAxes: CGPoint = { return centerPoint + Constant.offset }()
-    
     private lazy var centerPoint: CGPoint = { return CGPoint(x: frameWidth * 0.5, y: frameHeight * 0.5) }()
     
     private lazy var sumLabel: UILabel = {
@@ -90,11 +89,11 @@ public final class GraphScene: SKScene {
         static let dashedPattern: [CGFloat] = [10.0, 8.0]
     }
     
-    public override init(size: CGSize) {
-        self.frameWidth = size.width
-        self.frameHeight = size.height
+    public override init() {
+        self.frameWidth = sceneSize.width
+        self.frameHeight = sceneSize.height
         
-        super.init(size: size)
+        super.init(size: sceneSize)
     }
     
     required init?(coder aDecoder: NSCoder) { fatalError("init(coder:) has not been implemented") }
@@ -102,9 +101,6 @@ public final class GraphScene: SKScene {
     public override func didMove(to view: SKView) {
         super.didMove(to: view)
         backgroundColor = .mainGray
-        
-        print("GraphScene dimensions: \(view.frame.size)")
-        print("Center: \(centerPoint)")
         
         setupScene()
     }
@@ -154,6 +150,7 @@ public final class GraphScene: SKScene {
             addChild(positionLabelNode)
         case 2:
             plotComplexNumbersSumIfNeeded(true)
+            updateSumPosition()
         default:
             return
         }
@@ -449,15 +446,12 @@ public final class GraphScene: SKScene {
 
 extension GraphScene {
     public override func touchesBegan(_ touches: Set<UITouch>, with event: UIEvent?) {
-        print("=== touches began")
         for touch in touches {
             if let node = nodes(at: touch.location(in: self)).first,
                 node.name?.contains(AttributedPoint.NodeNames.complexNumberNodeName.rawValue) ?? false,
                 let nodeName = node.name {
                 activePointName = nodeName
-                // to do: scroll to the current cell?
                 let index = complexNumbersList.indexForPoint(nodeName)
-                print("index: \(index)")
                 pointTouch = touch
             }
         }
@@ -466,7 +460,6 @@ extension GraphScene {
     public override func touchesMoved(_ touches: Set<UITouch>, with event: UIEvent?) {
         guard let pointTouch = pointTouch else { return }
         
-        //        print("=== touches moved")
         for touch in touches where touch == pointTouch {
             let location = touch.location(in: self)
             guard let activePointName = activePointName,
@@ -499,8 +492,6 @@ extension GraphScene {
     
     public override func touchesEnded(_ touches: Set<UITouch>, with event: UIEvent?) {
         guard let pointTouch = pointTouch else { return }
-        
-        print("=== touches ended")
         
         for touch in touches where touch == pointTouch {
             self.pointTouch = nil
