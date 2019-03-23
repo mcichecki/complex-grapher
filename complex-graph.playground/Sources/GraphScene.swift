@@ -106,12 +106,6 @@ public final class GraphScene: SKScene {
         setupScene()
     }
     
-    //    public override func update(_ currentTime: TimeInterval) {
-    //        super.update(currentTime)
-    //
-    //        print("children: \(children.count)")
-    //    }
-    
     public func plot(complexNumber: ComplexNumber? = nil, withArc: Bool = false) {
         guard let attributedPoint = complexNumbersList.add() else { return }
         
@@ -136,6 +130,7 @@ public final class GraphScene: SKScene {
         vectorPath.addLine(to: startingPoint)
         
         let vectorNode = SKShapeNode(path: vectorPath)
+        vectorNode.lineWidth = 2.0
         vectorNode.strokeColor = attributedPoint.nodeColor
         vectorNode.name = attributedPoint.vectorNumberNodeName
         
@@ -148,6 +143,7 @@ public final class GraphScene: SKScene {
         case 1:
             plotArc(startingPoint)
             positionLabelNode.text = ""
+            positionLabelNode.zPosition = 10.0
             addChild(positionLabelNode)
         case 2:
             plotComplexNumbersSumIfNeeded(true)
@@ -166,12 +162,17 @@ public final class GraphScene: SKScene {
                                    startAngle: 0, endAngle: endAngle, clockwise: true)
         let arcDashedPath = arcPath.cgPath.copy(dashingWithPhase: 1.0, lengths: Constant.dashedPattern)
         let arcNode = SKShapeNode(path: arcDashedPath)
-        arcNode.alpha = 0.4
+        arcNode.alpha = 0.75
+        if let activeName = activePointName {
+            arcNode.strokeColor = complexNumbersList.colorForPoint(activeName) ?? .white
+        }
+        arcNode.lineWidth = 2.0
         arcNode.name = NodeName.arcNode.rawValue
         
         // arc label
         let labelPosition = centerOfAxes + endAngle.offset(radius: radius)
         arcLabelNode.text = complexNumber.degreesDescription(GraphScene.angleOption)
+        arcLabelNode.zPosition = 10.0
         arcLabelNode.position = labelPosition
         
         [arcNode, arcLabelNode].forEach(addChild(_:))
@@ -403,11 +404,6 @@ public final class GraphScene: SKScene {
         sumNode.position = sumPosition
     }
     
-    // TODO: Remove
-    private func listPoints() -> String {
-        return "\(complexNumbersPositions.map { transformPosition($0) }))"
-    }
-    
     private func transformPosition(_ position: CGPoint) -> ComplexNumber {
         let transformedPosition = position - centerOfAxes
         let divisor = AxisNode.scaleOffset
@@ -458,7 +454,6 @@ extension GraphScene {
                 node.name?.contains(AttributedPoint.NodeNames.complexNumberNodeName.rawValue) ?? false,
                 let nodeName = node.name {
                 activePointName = nodeName
-                let index = complexNumbersList.indexForPoint(nodeName)
                 pointTouch = touch
             }
         }
@@ -523,6 +518,9 @@ extension GraphScene {
         let arcNode = childNode(withName: NodeName.arcNode.rawValue)
         if let arcNode = arcNode as? SKShapeNode {
             let arcDashedPath = arcPath.cgPath.copy(dashingWithPhase: 1.0, lengths: Constant.dashedPattern)
+            if let activeName = activePointName {
+                arcNode.strokeColor = complexNumbersList.colorForPoint(activeName) ?? .white
+            }
             arcNode.path = arcDashedPath
         }
         
