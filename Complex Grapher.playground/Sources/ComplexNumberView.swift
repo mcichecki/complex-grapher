@@ -71,7 +71,7 @@ final class ComplexNumberView: UIView {
         let stackViewConstraints = [
             labelsStackView.topAnchor.constraint(equalTo: topAnchor),
             labelsStackView.leadingAnchor.constraint(equalTo: leadingAnchor),
-            labelsStackView.trailingAnchor.constraint(equalTo: trailingAnchor),
+            labelsStackView.trailingAnchor.constraint(equalTo: trailingAnchor, constant: -5.0),
             labelsStackView.bottomAnchor.constraint(equalTo: bottomAnchor)
         ]
         

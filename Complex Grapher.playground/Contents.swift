@@ -6,9 +6,9 @@
  
  ##### About playground
  
- This playground lets you discover and visualize a world of **_complex numbers_**.
+ This playground lets you discover and visualize **_complex numbers_**.
  
- Complex numbers are represented by different colors and all details about numbers can be found in the top view.
+ Complex numbers are represented by different colors and all details about them can be found in the top view.
  
  When you click on the number you will hear the audio description of the complex number. 🔈
  

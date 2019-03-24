@@ -66,15 +66,15 @@ extension ComplexNumber: CustomStringConvertible {
         if let realPart = realPart,
             let imaginaryPart = imaginaryPart {
             let sign = imaginaryPart < 0 ? "-" : "+"
-            return "\(realPart.rounded(numberOfDecimalPlaces)) \(sign) \(abs(imaginaryPart.rounded(numberOfDecimalPlaces)))i"
+            return "z = \(realPart.rounded(numberOfDecimalPlaces)) \(sign) \(abs(imaginaryPart.rounded(numberOfDecimalPlaces)))i"
         }
         
         if let realPart = realPart, imaginaryPart == nil {
-            return "\(realPart.rounded(numberOfDecimalPlaces))"
+            return "z = \(realPart.rounded(numberOfDecimalPlaces))"
         }
         
         if let imaginaryPart = imaginaryPart, realPart == nil {
-            return "\(imaginaryPart.rounded(numberOfDecimalPlaces))i"
+            return "z = \(imaginaryPart.rounded(numberOfDecimalPlaces))i"
         }
         
         return ""

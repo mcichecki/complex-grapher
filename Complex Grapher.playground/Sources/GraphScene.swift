@@ -366,12 +366,12 @@ public final class GraphScene: SKScene {
                         return
                     }
                     
+                    sumVectorNode.isHidden = !bottomView.detailsSwitch.isOn
                     sumVectorNode.alpha = 0.5
                     sumVectorNode.lineWidth = 2.0
                     addChild(sumVectorNode)
                 }
             } else {
-                print("")
                 let firstSumVector = childNode(withName: NodeName.firstSumVector.rawValue)
                 if let firstSumVector = firstSumVector as? SKShapeNode {
                     let sumVectorPath = CGMutablePath()
@@ -446,6 +446,10 @@ public final class GraphScene: SKScene {
         nodes.map { $0.rawValue }
             .compactMap { childNode(withName: $0) }
             .forEach { $0.isHidden = !sender.isOn }
+        
+        guard let activeName = activePointName,
+            let pointPosition = childNode(withName: activeName)?.position else { return }
+        updateLabels(with: pointPosition)
     }
 }
 
@@ -645,6 +649,9 @@ extension GraphScene: PointCollectionViewCellDelegate {
             .compactMap { childNode(withName: $0) }
             .forEach { $0.isHidden = true }
         
+        if complexNumbersList.numberOfPoints > 0 {
+            activePointName = complexNumbersList.list[0].complexNumberNodeName
+        }
         complexNumbersPositions.remove(at: item)
         updateSumPosition()
         pointsCollectionView.reloadData()

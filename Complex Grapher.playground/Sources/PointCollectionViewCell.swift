@@ -58,13 +58,13 @@ final class PointCollectionViewCell: UICollectionViewCell {
         let complexNumberViewConstraints = [
             complexNumberView.topAnchor.constraint(equalTo: contentView.topAnchor, constant: offset),
             complexNumberView.leadingAnchor.constraint(equalTo: contentView.leadingAnchor, constant: offset),
-            complexNumberView.trailingAnchor.constraint(equalTo: contentView.trailingAnchor, constant: -offset),
+            complexNumberView.trailingAnchor.constraint(equalTo: contentView.trailingAnchor, constant: -offset - 4.0),
             complexNumberView.bottomAnchor.constraint(equalTo: contentView.bottomAnchor, constant: -offset)
         ]
         
         let deleteButtonConstraints = [
             deleteButton.bottomAnchor.constraint(equalTo: complexNumberView.topAnchor, constant: buttonSize * 0.4),
-            deleteButton.trailingAnchor.constraint(equalTo: complexNumberView.trailingAnchor, constant: buttonSize * 0.6),
+            deleteButton.trailingAnchor.constraint(equalTo: complexNumberView.trailingAnchor, constant: buttonSize * 0.8),
             deleteButton.widthAnchor.constraint(equalToConstant: buttonSize),
             deleteButton.heightAnchor.constraint(equalToConstant: buttonSize)
         ]
