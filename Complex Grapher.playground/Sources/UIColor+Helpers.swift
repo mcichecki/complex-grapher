@@ -23,7 +23,8 @@ extension UIColor {
         .rgb(126, 214, 223), // turqoise
         //        .rgb(19, 15, 64), // navy
         .rgb(52, 152, 219), // blue
-        .rgb(190, 46, 221), // pink
+//        .rgb(190, 46, 221), // pink
+        .rgb(224, 86, 253)
     ]
     
     static func rgb(_ r: CGFloat, _ g: CGFloat, _ b: CGFloat, _ alpha: CGFloat = 1.0) -> UIColor {

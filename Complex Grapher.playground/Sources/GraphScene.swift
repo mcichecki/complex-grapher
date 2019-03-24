@@ -194,7 +194,7 @@ public final class GraphScene: SKScene {
         
         let vectorNode = SKShapeNode(path: vectorPath)
         vectorNode.name = NodeName.sumVectorNode.rawValue
-        
+        vectorNode.lineWidth = 2.0
         [pointNode, vectorNode].forEach(addChild(_:))
     }
     
@@ -354,16 +354,24 @@ public final class GraphScene: SKScene {
                     switch index {
                     case 0:
                         sumVectorNode.name = NodeName.firstSumVector.rawValue
+                        if complexNumbersList.numberOfPoints > 1 {
+                            sumVectorNode.strokeColor = complexNumbersList.list[1].nodeColor
+                        }
                     case 1:
                         sumVectorNode.name = NodeName.secondSumVector.rawValue
+                        if complexNumbersList.numberOfPoints > 0 {
+                            sumVectorNode.strokeColor = complexNumbersList.list[0].nodeColor
+                        }
                     default:
                         return
                     }
                     
-                    sumVectorNode.strokeColor = .white
+                    sumVectorNode.alpha = 0.5
+                    sumVectorNode.lineWidth = 2.0
                     addChild(sumVectorNode)
                 }
             } else {
+                print("")
                 let firstSumVector = childNode(withName: NodeName.firstSumVector.rawValue)
                 if let firstSumVector = firstSumVector as? SKShapeNode {
                     let sumVectorPath = CGMutablePath()
@@ -372,8 +380,8 @@ public final class GraphScene: SKScene {
                     sumVectorPath.addLine(to: sumPosition)
                     
                     let dashedPath = sumVectorPath.copy(dashingWithPhase: 10.0, lengths: Constant.dashedPattern)
-                    firstSumVector.alpha = 0.5
                     firstSumVector.path = dashedPath
+                    
                 }
                 
                 let secondSumVector = childNode(withName: NodeName.secondSumVector.rawValue)
@@ -384,7 +392,6 @@ public final class GraphScene: SKScene {
                     sumVectorPath.addLine(to: sumPosition)
                     
                     let dashedPath = sumVectorPath.copy(dashingWithPhase: 10.0, lengths: Constant.dashedPattern)
-                    secondSumVector.alpha = 0.5
                     secondSumVector.path = dashedPath
                 }
             }
