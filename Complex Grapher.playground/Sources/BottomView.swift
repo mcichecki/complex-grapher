@@ -113,6 +113,5 @@ final class BottomView: UIView {
         detailsSwitch.transform = CGAffineTransform(scaleX: 0.6, y: 0.6)
         detailsSwitch.isOn = true
         detailsSwitch.layer.cornerRadius = 16.0
-
     }
 }
